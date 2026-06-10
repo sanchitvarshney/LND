@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         String   @default("learner") // super_admin | admin | manager | learner
+  department   String?
+  managerId    String?
+  manager      User?    @relation("Reports", fields: [managerId], references: [id])
+  reports      User[]   @relation("Reports")
+  status       String   @default("active")
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignments  Assignment[]
+  progress     UserProgress[]
+  attempts     QuizAttempt[]
+  certificates Certificate[]
+  auditLogs    AuditLog[]
+  notifications Notification[]
+}
+
+model TrainingModule {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  category     String   @default("Compliance")
+  isMandatory  Boolean  @default(true)
+  passThreshold Int     @default(70)
+  validityDays Int?
+  status       String   @default("published") // draft | published | archived
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  videos       Video[]
+  assessment   Assessment?
+  assignments  Assignment[]
+  certificates Certificate[]
+}
+
+model Video {
+  id              String   @id @default(uuid())
+  moduleId        String
+  module          TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title           String
+  orderIndex      Int      @default(0)
+  durationSeconds Int
+  sourceUrl       String
+  binSizeSeconds  Int      @default(1)
+  createdAt       DateTime @default(now())
+
+  progress        UserProgress[]
+}
+
+model Assessment {
+  id                String   @id @default(uuid())
+  moduleId          String   @unique
+  module            TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title             String   @default("Knowledge Check")
+  passingScore      Int      @default(70)
+  maxAttempts       Int      @default(3)
+  timeLimitSeconds  Int?
+  shuffleQuestions  Boolean  @default(false)
+  showAnswers       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  questions         Question[]
+  attempts          QuizAttempt[]
+}
+
+model Question {
+  id             String   @id @default(uuid())
+  assessmentId   String
+  assessment     Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  type           String   // mcq | multi_select | true_false | short_answer
+  prompt         String
+  points         Int      @default(1)
+  orderIndex     Int      @default(0)
+  explanation    String?
+  // For choice questions: JSON array of {id,label,isCorrect}
+  optionsJson    String?
+  // For short_answer: JSON { matchType, value, caseSensitive }
+  answerKeyJson  String?
+  requiresManual Boolean  @default(false)
+
+  responses      QuizResponse[]
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  assignedById String?
+  dueAt       DateTime?
+  expiresAt   DateTime?
+  status      String   @default("assigned") // assigned | in_progress | completed | overdue | expired
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, moduleId])
+}
+
+model UserProgress {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId            String
+  video              Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  // Coverage bitmap: string of '0'/'1', one char per bin
+  watchedBitmap      String   @default("")
+  percentComplete    Float    @default(0)
+  maxPositionSeconds Int      @default(0)
+  status             String   @default("not_started") // not_started | in_progress | video_completed
+  firstStartedAt     DateTime?
+  completedAt        DateTime?
+  updatedAt          DateTime @updatedAt
+
+  @@unique([userId, videoId])
+}
+
+model QuizAttempt {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  attemptNo    Int      @default(1)
+  score        Float    @default(0)
+  passed       Boolean  @default(false)
+  status       String   @default("submitted") // in_progress | submitted | graded
+  startedAt    DateTime @default(now())
+  submittedAt  DateTime?
+
+  responses    QuizResponse[]
+}
+
+model QuizResponse {
+  id             String   @id @default(uuid())
+  attemptId      String
+  attempt        QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responseJson   String
+  isCorrect      Boolean  @default(false)
+  pointsAwarded  Float    @default(0)
+}
+
+model Certificate {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId         String
+  module           TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attemptId        String?
+  serialNo         String   @unique
+  verificationHash String   @unique
+  score            Float
+  issuedAt         DateTime @default(now())
+  expiresAt        DateTime?
+  revoked          Boolean  @default(false)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String?
+  entityId   String?
+  metaJson   String?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
