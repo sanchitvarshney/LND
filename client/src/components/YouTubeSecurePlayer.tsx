@@ -14,6 +14,7 @@ interface Props {
 // driven through the YouTube IFrame API (native controls + keyboard seeking disabled).
 export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const player = useRef<any>(null);
   const covered = useRef<Set<number>>(new Set());
   const maxWatched = useRef(0);               // high-water mark (seconds); forward seeking beyond this is blocked
@@ -144,7 +145,15 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
     const p = player.current; if (!p) return;
     if (p.isMuted?.()) { p.unMute(); setMuted(false); } else { p.mute(); setMuted(true); }
   };
-  const goFullscreen = () => hostRef.current?.parentElement?.requestFullscreen?.();
+  const goFullscreen = () => {
+    const el = containerRef.current as any; if (!el) return;
+    const doc = document as any;
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+      (doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc);
+    } else {
+      (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+    }
+  };
 
   // backward-only scrub
   const onScrub = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -161,7 +170,8 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
 
   return (
     <div className="card overflow-hidden">
-      <div className="relative bg-black aspect-video group">
+      <div ref={containerRef} className="yt-fs relative bg-black aspect-video group">
+        <style>{`.yt-fs:fullscreen{width:100vw;height:100vh;aspect-ratio:auto}.yt-fs:fullscreen>div,.yt-fs:fullscreen iframe{width:100%!important;height:100%!important}`}</style>
         <div ref={hostRef} className="w-full h-full pointer-events-none" />
 
         {/* Click-catcher: intercepts all interaction so YouTube's own UI can't be used to skip */}
