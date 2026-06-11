@@ -1,15 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import { api } from '../lib/api';
 import { GraduationCap, ShieldCheck, Lock, Loader2, Award, PlayCircle, Sparkles } from 'lucide-react';
 import Background3D from '../components/ui/Background3D';
 import TiltCard from '../components/ui/TiltCard';
-
-const DEMO = [
-  { role: 'Learner', email: 'learner@acme.com', password: 'Learner@123' },
-  { role: 'Manager', email: 'manager@acme.com', password: 'Manager@123' },
-  { role: 'Admin', email: 'admin@acme.com', password: 'Admin@123' },
-];
 
 const FEATURES = [
   { icon: PlayCircle, text: 'Unskippable, server-verified video tracking' },
@@ -20,10 +15,15 @@ const FEATURES = [
 export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState('learner@acme.com');
-  const [password, setPassword] = useState('Learner@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // If no admin exists yet, send the user to first-time setup.
+  useEffect(() => {
+    api.get('/auth/setup-status').then((r) => { if (r.data.needsSetup) nav('/setup', { replace: true }); }).catch(() => {});
+  }, [nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(''); setBusy(true);
@@ -85,16 +85,6 @@ export default function Login() {
                   {busy ? <Loader2 className="animate-spin" size={18} /> : <Lock size={16} />} Sign in
                 </button>
               </form>
-              <hr className="neon-divider my-7" />
-              <p className="text-[11px] font-semibold tracking-widest text-slate-400 mb-2.5">DEMO ACCOUNTS — CLICK TO FILL</p>
-              <div className="grid grid-cols-3 gap-2">
-                {DEMO.map((d) => (
-                  <button key={d.email} onClick={() => { setEmail(d.email); setPassword(d.password); }}
-                    className="rounded-xl glass px-2 py-2.5 text-xs font-semibold text-slate-600 transition hover:border-brand-400/60 hover:text-brand-300 hover:shadow-glow hover:-translate-y-0.5">
-                    {d.role}
-                  </button>
-                ))}
-              </div>
             </div>
           </TiltCard>
         </div>

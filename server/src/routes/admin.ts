@@ -1,6 +1,9 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
 import { prisma } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { audit } from '../middleware/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -69,6 +72,29 @@ router.post('/notifications/:id/read', async (req, res) => {
 router.get('/audit-logs', requireRole('admin'), async (req, res) => {
   const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 100, include: { actor: true } });
   res.json({ data: logs.map((l) => ({ id: l.id, action: l.action, entityType: l.entityType, actor: l.actor?.fullName ?? 'system', createdAt: l.createdAt })) });
+});
+
+
+// Admin: create a user (learner / manager / admin) with a password
+const createUserSchema = z.object({
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  role: z.enum(['admin', 'manager', 'learner']),
+  password: z.string().min(8),
+  department: z.string().optional(),
+  managerId: z.string().optional(),
+});
+router.post('/users', requireRole('admin'), async (req, res) => {
+  const p = createUserSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input (password min 8 chars).' });
+  const existing = await prisma.user.findUnique({ where: { email: p.data.email.toLowerCase() } });
+  if (existing) return res.status(409).json({ error: 'A user with that email already exists.' });
+  const user = await prisma.user.create({ data: {
+    email: p.data.email.toLowerCase(), passwordHash: bcrypt.hashSync(p.data.password, 10),
+    fullName: p.data.fullName, role: p.data.role, department: p.data.department ?? null, managerId: p.data.managerId ?? null,
+  }});
+  await audit(req, 'user.create', 'user', user.id, { role: user.role });
+  res.status(201).json({ data: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department } });
 });
 
 export default router;

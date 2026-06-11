@@ -10,8 +10,7 @@ import assessmentRoutes from './routes/assessments.js';
 import certificateRoutes from './routes/certificates.js';
 import adminRoutes from './routes/admin.js';
 import publicRoutes from './routes/public.js';
-import { seedIfEmpty, initDb } from './db.js';
-import { seed } from './seed.js';
+import { initDb } from './db.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -51,6 +50,5 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 initDb()
-  .then(() => seedIfEmpty(seed))
   .then(() => app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT} (${isProd ? 'production' : 'development'})`)))
   .catch((e) => { console.error('Startup failed:', e); process.exit(1); });

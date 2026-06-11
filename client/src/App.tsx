@@ -17,6 +17,7 @@ import Reports from './pages/Reports';
 import Audit from './pages/Audit';
 import Admin from './pages/Admin';
 import Verify from './pages/Verify';
+import Setup from './pages/Setup';
 
 function Protected({ children, roles }: { children: JSX.Element; roles?: string[] }) {
   const { user, loading } = useAuth();
@@ -36,6 +37,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/setup" element={<Setup />} />
       <Route path="/verify/:hash" element={<Verify />} />
       <Route path="/" element={<Protected><Home /></Protected>} />
       <Route path="/catalog" element={<Protected><Catalog /></Protected>} />

@@ -57,4 +57,23 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department, managerId: user.managerId });
 });
 
+
+// First-run setup: is an admin account still needed?
+router.get('/setup-status', async (_req, res) => {
+  const count = await prisma.user.count();
+  res.json({ needsSetup: count === 0 });
+});
+
+// Create the very first admin. Allowed ONLY when there are zero users.
+const setupSchema = z.object({ email: z.string().email(), fullName: z.string().min(1), password: z.string().min(8) });
+router.post('/setup', async (req, res) => {
+  const count = await prisma.user.count();
+  if (count > 0) return res.status(403).json({ error: 'Setup already completed' });
+  const p = setupSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input. Password must be at least 8 characters.' });
+  const user = await prisma.user.create({ data: { email: p.data.email.toLowerCase(), passwordHash: bcrypt.hashSync(p.data.password, 10), fullName: p.data.fullName, role: 'admin' } });
+  await audit(req, 'setup.first_admin', 'user', user.id);
+  res.status(201).json({ ok: true });
+});
+
 export default router;
