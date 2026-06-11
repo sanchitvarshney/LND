@@ -14,6 +14,19 @@ export async function initDb() {
   if (process.env.DB_DRIVER === 'prisma') {
     const { createPrismaClient } = await import('./drivers/prismaClient.js');
     prisma = await createPrismaClient();
+    // Auto-create tables on first boot (the running app has DATABASE_URL in its env).
+    try {
+      await prisma.user.count();
+    } catch {
+      console.log('[db] tables missing — running `prisma db push` to create the schema...');
+      const { execSync } = await import('node:child_process');
+      try {
+        execSync('npx prisma db push --skip-generate', { stdio: 'inherit', env: process.env });
+        console.log('[db] schema created.');
+      } catch (e) {
+        console.error('[db] prisma db push failed:', e);
+      }
+    }
     console.log('[db] using Prisma driver');
   } else {
     console.log('[db] using file-store driver (set DB_DRIVER=prisma to use a real database)');

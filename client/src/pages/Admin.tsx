@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Badge, Spinner } from '../components/ui/Primitives';
 import { TYPE_LABEL } from '../components/QuestionRenderer';
-import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus } from 'lucide-react';
+import { isYouTube } from '../lib/video';
+import { fetchYouTubeDuration } from '../lib/youtubeApi';
+import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2 } from 'lucide-react';
 
 const ROLE_TONE: any = { admin: 'brand', manager: 'amber', learner: 'slate', super_admin: 'brand' };
 
@@ -156,24 +158,62 @@ function UserModal({ onClose, onSaved, users }: any) {
 
 function VideoModal({ module, onClose, onSaved }: any) {
   const [f, setF] = useState({ title: '', sourceUrl: '', durationSeconds: 60 });
+  const [detecting, setDetecting] = useState(false);
+  const [detectMsg, setDetectMsg] = useState('');
+  const yt = isYouTube(f.sourceUrl);
+
+  // When a YouTube link is pasted, fetch the real duration automatically so the
+  // admin really can just paste the link. Debounced to avoid probing on every keystroke.
+  useEffect(() => {
+    if (!yt) { setDetectMsg(''); return; }
+    let alive = true;
+    setDetecting(true); setDetectMsg('');
+    const url = f.sourceUrl;
+    const t = setTimeout(() => {
+      fetchYouTubeDuration(parseIdSafe(url))
+        .then((secs) => { if (!alive || f.sourceUrl !== url) return; setF((s) => ({ ...s, durationSeconds: secs })); setDetectMsg(`Detected length: ${fmtDur(secs)}`); })
+        .catch(() => { if (alive) setDetectMsg("Couldn't read length automatically — please enter it below."); })
+        .finally(() => { if (alive) setDetecting(false); });
+    }, 600);
+    return () => { alive = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.sourceUrl]);
+
   const m = useMutation({
-    mutationFn: () => api.post(`/modules/${module.id}/videos`, { title: f.title, sourceUrl: f.sourceUrl, durationSeconds: Number(f.durationSeconds) }),
+    mutationFn: () => api.post(`/modules/${module.id}/videos`, { title: f.title, sourceUrl: f.sourceUrl.trim(), durationSeconds: Number(f.durationSeconds) }),
     onSuccess: onSaved,
   });
   return (
     <Modal title={`Add video · ${module.title}`} onClose={onClose}>
       <div className="space-y-3">
         <div><label className="label">Video title</label><input className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
-        <div><label className="label">Video URL</label><input className="input" placeholder="https://…/video.mp4" value={f.sourceUrl} onChange={(e) => setF({ ...f, sourceUrl: e.target.value })} />
-          <p className="text-xs text-slate-400 mt-1">Direct video link (MP4 or HLS .m3u8). The secure player tracks watch progress on this file.</p></div>
-        <div><label className="label">Duration (seconds)</label><input className="input" type="number" value={f.durationSeconds} onChange={(e) => setF({ ...f, durationSeconds: +e.target.value })} />
-          <p className="text-xs text-slate-400 mt-1">Used for the 100%-watched completion gate.</p></div>
+        <div><label className="label">Video URL</label>
+          <input className="input" placeholder="https://www.youtube.com/watch?v=…  or  https://…/video.mp4" value={f.sourceUrl} onChange={(e) => setF({ ...f, sourceUrl: e.target.value })} />
+          {yt ? (
+            <p className="text-xs text-red-600 mt-1 flex items-center gap-1"><Youtube size={13} /> YouTube link detected — it plays in the secure player with skipping disabled. Only the link is stored, not the video.</p>
+          ) : (
+            <p className="text-xs text-slate-400 mt-1">Paste a YouTube link, or a direct video file (MP4 / HLS .m3u8). Only the link is stored in the database.</p>
+          )}
+        </div>
+        <div><label className="label">Duration (seconds)</label>
+          <div className="relative">
+            <input className="input" type="number" value={f.durationSeconds} onChange={(e) => setF({ ...f, durationSeconds: +e.target.value })} />
+            {detecting && <Loader2 size={16} className="animate-spin text-brand-500 absolute right-3 top-1/2 -translate-y-1/2" />}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">{detectMsg || 'Used for the 100%-watched completion gate.'}</p>
+        </div>
         {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not add video (check the URL is valid).'}</p>}
-        <button onClick={() => m.mutate()} disabled={m.isPending || !f.title || !f.sourceUrl} className="btn-primary w-full">Add video</button>
+        <button onClick={() => m.mutate()} disabled={m.isPending || !f.title || !f.sourceUrl || f.durationSeconds < 1} className="btn-primary w-full">Add video</button>
       </div>
     </Modal>
   );
 }
+
+function parseIdSafe(url: string): string {
+  const m = url.match(/(?:v=|youtu\.be\/|\/embed\/|\/shorts\/|\/live\/|\/v\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+function fmtDur(s: number) { const m = Math.floor(s / 60); const sec = s % 60; return `${m}m ${sec}s`; }
 
 function AssignModal({ module, users, onClose, onSaved }: any) {
   const [userId, setUserId] = useState('');

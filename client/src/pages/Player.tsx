@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Spinner } from '../components/ui/Primitives';
 import SecureVideoPlayer from '../components/SecureVideoPlayer';
+import YouTubeSecurePlayer from '../components/YouTubeSecurePlayer';
+import { isYouTube } from '../lib/video';
 import { ArrowLeft, CheckCircle2, ChevronRight, ShieldCheck } from 'lucide-react';
 
 export default function Player() {
@@ -30,8 +32,13 @@ export default function Player() {
           <h1 className="text-xl font-extrabold text-slate-900">{video.title}</h1>
           <span className="text-sm text-slate-400">Video {idx + 1} of {m.videos.length}</span>
         </div>
-        <SecureVideoPlayer key={video.id} video={video} initialStatus={video.progress?.status}
-          onComplete={() => { setJustCompleted(true); refetch(); qc.invalidateQueries({ queryKey: ['modules'] }); }} />
+        {isYouTube(video.sourceUrl) ? (
+          <YouTubeSecurePlayer key={video.id} video={video} initialStatus={video.progress?.status}
+            onComplete={() => { setJustCompleted(true); refetch(); qc.invalidateQueries({ queryKey: ['modules'] }); }} />
+        ) : (
+          <SecureVideoPlayer key={video.id} video={video} initialStatus={video.progress?.status}
+            onComplete={() => { setJustCompleted(true); refetch(); qc.invalidateQueries({ queryKey: ['modules'] }); }} />
+        )}
       </div>
 
       {(justCompleted || video.progress?.status === 'video_completed') && (

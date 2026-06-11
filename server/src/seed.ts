@@ -43,6 +43,26 @@ export async function seed() {
   console.log('Seed complete. Logins: admin@acme.com/Admin@123 · manager@acme.com/Manager@123 · learner@acme.com/Learner@123');
 }
 
+
+
+// Create exactly ONE admin from env when the DB is empty (no demo data).
+// Set FIRST_ADMIN_EMAIL + FIRST_ADMIN_PASSWORD (and optional FIRST_ADMIN_NAME) in Plesk.
+export async function bootstrapFirstAdmin() {
+  const count = await prisma.user.count();
+  if (count > 0) return;
+  const email = process.env.FIRST_ADMIN_EMAIL;
+  const password = process.env.FIRST_ADMIN_PASSWORD;
+  if (!email || !password) {
+    console.log('[bootstrap] DB empty and FIRST_ADMIN_* not set — create the admin via the setup page or /auth/setup.');
+    return;
+  }
+  await prisma.user.create({ data: {
+    email: email.toLowerCase(), passwordHash: bcrypt.hashSync(password, 10),
+    fullName: process.env.FIRST_ADMIN_NAME || 'Administrator', role: 'admin',
+  }});
+  console.log('[bootstrap] created first admin:', email.toLowerCase());
+}
+
 // allow `npm run seed`
 if (process.argv[1] && process.argv[1].endsWith('seed.ts')) {
   seed().then(() => process.exit(0));
