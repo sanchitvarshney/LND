@@ -16,7 +16,7 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-extrabold text-slate-900">Manage Training</h1><p className="text-slate-500 text-sm mt-0.5">Create modules and author assessment questions.</p></div>
+        <div><h1 className="text-2xl font-display font-bold text-slate-900">Manage Training</h1><p className="text-slate-500 text-sm mt-0.5">Create modules and author assessment questions.</p></div>
         <button onClick={() => setShowModule(true)} className="btn-primary"><Plus size={16} /> New module</button>
       </div>
 
@@ -43,7 +43,7 @@ export default function Admin() {
 
 function Modal({ title, onClose, children }: any) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 grid place-items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
       <div className="card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-bold text-slate-900">{title}</h2><button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X size={20} /></button></div>
         {children}
@@ -111,7 +111,7 @@ function QuestionModal({ module, onClose, onSaved }: any) {
                 <div key={i} className="flex items-center gap-2">
                   <button onClick={() => setOpt(i, { isCorrect: !o.isCorrect })} className={`h-7 w-7 shrink-0 rounded-md grid place-items-center ${o.isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}><Check size={15} /></button>
                   <input className="input !py-1.5" placeholder={`Option ${o.id.toUpperCase()}`} value={o.label} onChange={(e) => setOpt(i, { label: e.target.value })} />
-                  {options.length > 2 && <button onClick={() => setOptions(options.filter((_, j) => j !== i))} className="text-slate-300 hover:text-red-500"><Trash2 size={16} /></button>}
+                  {options.length > 2 && <button onClick={() => setOptions(options.filter((_, j) => j !== i))} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button>}
                 </div>
               ))}
               <button onClick={() => setOptions([...options, { id: String.fromCharCode(97 + options.length), label: '', isCorrect: false }])} className="text-sm text-brand-600 font-semibold">+ Add option</button>

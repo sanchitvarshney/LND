@@ -18,9 +18,13 @@ export default function LearnerDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">Welcome back, {user?.fullName?.split(' ')[0]}</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Here's your assigned training and progress.</p>
+      <div className="card relative overflow-hidden p-6 lg:p-8">
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }} />
+        <div className="absolute -bottom-20 right-32 h-40 w-40 rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(circle,#22d3ee,transparent 70%)' }} />
+        <h1 className="relative text-3xl font-display font-bold text-slate-900">
+          Welcome back, <span className="gradient-text">{user?.fullName?.split(' ')[0]}</span>
+        </h1>
+        <p className="relative text-slate-500 text-sm mt-1">Here's your assigned training and progress. Keep the streak alive!</p>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">
@@ -30,7 +34,7 @@ export default function LearnerDashboard() {
       </div>
 
       <div>
-        <h2 className="font-bold text-slate-800 mb-3">Your training</h2>
+        <h2 className="font-display font-bold text-slate-800 mb-3">Your training</h2>
         {mods.length === 0 ? (
           <EmptyState title="All caught up!" subtitle="You have no training assigned right now." icon={<Award size={22} />} />
         ) : (
@@ -39,11 +43,11 @@ export default function LearnerDashboard() {
               const ds = dueState(m.assignment?.dueAt, m.assignment?.status);
               const cta = m.assignment?.status === 'completed' ? 'View certificate' : m.videosCompleted ? 'Take assessment' : m.percentWatched > 0 ? 'Resume' : 'Start';
               return (
-                <Link key={m.id} to={`/modules/${m.id}`} className="card p-5 flex items-center gap-5 hover:shadow-soft transition group">
+                <Link key={m.id} to={`/modules/${m.id}`} className="card p-5 flex items-center gap-5 transition-all duration-300 group hover:shadow-soft hover:border-brand-400/40 hover:-translate-y-1 hover:shadow-glow">
                   <ProgressRing value={m.assignment?.status === 'completed' ? 100 : m.percentWatched} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-slate-800 truncate">{m.title}</h3>
+                      <h3 className="font-bold text-slate-800 truncate group-hover:text-brand-300 transition">{m.title}</h3>
                       {m.isMandatory && <Badge tone="brand">Mandatory</Badge>}
                       <Badge tone={ds.tone}>{ds.label}</Badge>
                     </div>
@@ -55,7 +59,7 @@ export default function LearnerDashboard() {
                       {m.assignment?.dueAt && <><span>·</span><span>Due {fmtDate(m.assignment.dueAt)}</span></>}
                     </div>
                   </div>
-                  <span className="btn-primary shrink-0 group-hover:bg-brand-700"><PlayCircle size={16} /> {cta}</span>
+                  <span className="btn-primary shrink-0 group-hover:shadow-glow-lg"><PlayCircle size={16} /> {cta}</span>
                 </Link>
               );
             })}

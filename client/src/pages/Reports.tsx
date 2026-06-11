@@ -16,7 +16,7 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-extrabold text-slate-900">Reports &amp; Analytics</h1><p className="text-slate-500 text-sm mt-0.5">Compliance tracking and completion analytics.</p></div>
+        <div><h1 className="text-2xl font-display font-bold text-slate-900">Reports &amp; Analytics</h1><p className="text-slate-500 text-sm mt-0.5">Compliance tracking and completion analytics.</p></div>
         <button onClick={exportCsv} className="btn-ghost"><Download size={16} /> Export CSV</button>
       </div>
       <div className="grid sm:grid-cols-4 gap-4">

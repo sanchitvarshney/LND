@@ -25,7 +25,7 @@ export function QuestionRenderer({ q, value, onChange }: { q: Question; value: A
         const selected = arr.includes(o.id);
         return (
           <button key={o.id} type="button" onClick={() => toggle(o.id)}
-            className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition ${selected ? 'border-brand-500 bg-brand-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+            className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition ${selected ? 'border-brand-500 bg-brand-50 shadow-glow' : 'border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5'}`}>
             <span className={`shrink-0 grid place-items-center h-5 w-5 ${multi ? 'rounded-md' : 'rounded-full'} border-2 ${selected ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'}`}>
               {selected && <Check size={13} strokeWidth={3} />}
             </span>

@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { GraduationCap, ShieldCheck, Lock, Loader2 } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Lock, Loader2, Award, PlayCircle, Sparkles } from 'lucide-react';
+import Background3D from '../components/ui/Background3D';
+import TiltCard from '../components/ui/TiltCard';
 
 const DEMO = [
   { role: 'Learner', email: 'learner@acme.com', password: 'Learner@123' },
   { role: 'Manager', email: 'manager@acme.com', password: 'Manager@123' },
   { role: 'Admin', email: 'admin@acme.com', password: 'Admin@123' },
+];
+
+const FEATURES = [
+  { icon: PlayCircle, text: 'Unskippable, server-verified video tracking' },
+  { icon: Award, text: 'Automatic certificates with public verification' },
+  { icon: ShieldCheck, text: 'Role-based access & audit-ready records' },
 ];
 
 export default function Login() {
@@ -25,45 +33,70 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Brand panel */}
-      <div className="hidden lg:flex flex-col justify-between p-12 text-white bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-lg bg-white/15 grid place-items-center"><GraduationCap size={20} /></div>
-          <span className="font-extrabold text-xl">LearnGuard</span>
-        </div>
-        <div>
-          <h1 className="text-4xl font-extrabold leading-tight">Compliance training,<br />provably complete.</h1>
-          <p className="mt-4 text-brand-100 max-w-md">Unskippable video tracking, admin-built assessments, automatic certification, and audit-ready records — all in one platform.</p>
-          <div className="mt-8 space-y-3 text-sm text-brand-100">
-            <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-brand-300" /> Server-verified watch progress</div>
-            <div className="flex items-center gap-2"><Lock size={18} className="text-brand-300" /> Role-based access &amp; audit logs</div>
-          </div>
-        </div>
-        <div className="text-xs text-brand-200">© 2026 LearnGuard · Enterprise L&amp;D</div>
-      </div>
+    <div className="min-h-screen relative overflow-hidden scene-3d">
+      <Background3D density={1.3} />
 
-      {/* Form */}
-      <div className="flex items-center justify-center p-6 bg-slate-50">
-        <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8"><div className="h-9 w-9 rounded-lg bg-brand-600 text-white grid place-items-center"><GraduationCap size={20} /></div><span className="font-extrabold text-xl text-brand-900">LearnGuard</span></div>
-          <h2 className="text-2xl font-extrabold text-slate-900">Welcome back</h2>
-          <p className="text-slate-500 text-sm mt-1 mb-6">Sign in to access your training.</p>
-          <form onSubmit={submit} className="space-y-4">
-            <div><label className="label">Email</label><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></div>
-            <div><label className="label">Password</label><input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></div>
-            {err && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2 ring-1 ring-red-200">{err}</div>}
-            <button className="btn-primary w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" size={18} /> : null} Sign in</button>
-          </form>
-          <div className="mt-6">
-            <p className="text-xs font-semibold text-slate-400 mb-2">DEMO ACCOUNTS — click to fill</p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO.map((d) => (
-                <button key={d.email} onClick={() => { setEmail(d.email); setPassword(d.password); }}
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 hover:border-brand-400 hover:text-brand-700 transition">{d.role}</button>
+      <div className="relative z-10 min-h-screen grid lg:grid-cols-2 max-w-7xl mx-auto">
+        {/* Brand panel */}
+        <div className="hidden lg:flex flex-col justify-between p-14">
+          <div className="flex items-center gap-3 animate-fade-up">
+            <div className="h-11 w-11 rounded-2xl grid place-items-center text-white shadow-glow-lg animate-pulse-glow"
+              style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}>
+              <GraduationCap size={22} />
+            </div>
+            <span className="font-display font-bold text-2xl text-slate-900 tracking-tight">LearnGuard</span>
+          </div>
+
+          <div>
+            <div className="chip glass text-brand-300 mb-6 animate-fade-up"><Sparkles size={13} /> Next-gen training platform</div>
+            <h1 className="text-5xl font-display font-bold leading-[1.1] text-slate-900 animate-fade-up" style={{ animationDelay: '.08s' }}>
+              Compliance training,<br /><span className="gradient-text">provably complete.</span>
+            </h1>
+            <p className="mt-5 text-slate-500 max-w-md text-lg animate-fade-up" style={{ animationDelay: '.16s' }}>
+              Watch. Learn. Get certified. Every second of progress verified on the server — no shortcuts, no doubts.
+            </p>
+            <div className="mt-9 space-y-3 animate-fade-up" style={{ animationDelay: '.24s' }}>
+              {FEATURES.map((f) => (
+                <div key={f.text} className="flex items-center gap-3 glass rounded-xl px-4 py-3 text-sm text-slate-700 transition hover:border-white/20 hover:translate-x-1">
+                  <f.icon size={18} className="text-accent-cyan shrink-0" /> {f.text}
+                </div>
               ))}
             </div>
           </div>
+
+          <div className="text-xs text-slate-400">© 2026 LearnGuard · Enterprise L&amp;D</div>
+        </div>
+
+        {/* Form */}
+        <div className="flex items-center justify-center p-6">
+          <TiltCard max={4} className="w-full max-w-md">
+            <div className="card p-8 sm:p-10 shadow-soft animate-fade-up">
+              <div className="lg:hidden flex items-center gap-2.5 mb-8">
+                <div className="h-10 w-10 rounded-xl grid place-items-center text-white shadow-glow" style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}><GraduationCap size={20} /></div>
+                <span className="font-display font-bold text-xl text-slate-900">LearnGuard</span>
+              </div>
+              <h2 className="text-2xl font-display font-bold text-slate-900">Welcome back</h2>
+              <p className="text-slate-500 text-sm mt-1 mb-7">Sign in to continue your training journey.</p>
+              <form onSubmit={submit} className="space-y-4">
+                <div><label className="label">Email</label><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></div>
+                <div><label className="label">Password</label><input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></div>
+                {err && <div className="rounded-xl bg-red-50 text-red-700 text-sm px-3 py-2 ring-1 ring-red-200">{err}</div>}
+                <button className="btn-primary w-full !py-3" disabled={busy}>
+                  {busy ? <Loader2 className="animate-spin" size={18} /> : <Lock size={16} />} Sign in
+                </button>
+              </form>
+              <hr className="neon-divider my-7" />
+              <p className="text-[11px] font-semibold tracking-widest text-slate-400 mb-2.5">DEMO ACCOUNTS — CLICK TO FILL</p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEMO.map((d) => (
+                  <button key={d.email} onClick={() => { setEmail(d.email); setPassword(d.password); }}
+                    className="rounded-xl glass px-2 py-2.5 text-xs font-semibold text-slate-600 transition hover:border-brand-400/60 hover:text-brand-300 hover:shadow-glow hover:-translate-y-0.5">
+                    {d.role}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </TiltCard>
         </div>
       </div>
     </div>

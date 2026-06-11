@@ -8,7 +8,7 @@ export default function Audit() {
   if (isLoading) return <div className="grid place-items-center py-20"><Spinner /></div>;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-extrabold text-slate-900">Audit Log</h1><p className="text-slate-500 text-sm mt-0.5">Immutable record of platform activity.</p></div>
+      <div><h1 className="text-2xl font-display font-bold text-slate-900">Audit Log</h1><p className="text-slate-500 text-sm mt-0.5">Immutable record of platform activity.</p></div>
       <div className="card divide-y divide-slate-100">
         {(data || []).map((l: any) => (
           <div key={l.id} className="flex items-center gap-3 px-5 py-3 text-sm">

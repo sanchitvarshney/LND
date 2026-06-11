@@ -10,7 +10,7 @@ export default function AdminOverview() {
   const d = data;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-extrabold text-slate-900">Organization Overview</h1><p className="text-slate-500 text-sm mt-0.5">Compliance status across all training.</p></div>
+      <div><h1 className="text-2xl font-display font-bold text-slate-900">Organization Overview</h1><p className="text-slate-500 text-sm mt-0.5">Compliance status across all training.</p></div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat label="Overall compliance" value={`${d.compliancePct}%`} tone="emerald" icon={<ShieldCheck size={20} />} />
         <Stat label="Active learners" value={d.learners} tone="brand" icon={<Users size={20} />} />

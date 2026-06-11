@@ -1,7 +1,7 @@
 // LearnGuard data model.
 //
 // LOCAL DEV (default): SQLite — no database server needed.
-//   datasource db { provider = "sqlite"  url = env("DATABASE_URL") }   // DATABASE_URL="file:./dev.db"
+//   datasource db { provider = "mysql"  url = env("DATABASE_URL") }   // DATABASE_URL="file:./dev.db"
 //
 // PRODUCTION: switch to PostgreSQL by changing the provider line below to:
 //   datasource db { provider = "postgresql" url = env("DATABASE_URL") } // DATABASE_URL="postgresql://user:pass@host:5432/learnguard"
@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 

@@ -10,7 +10,7 @@ export default function Team() {
   const rows = data || [];
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-extrabold text-slate-900">Team Tracking</h1><p className="text-slate-500 text-sm mt-0.5">Compliance status for your team.</p></div>
+      <div><h1 className="text-2xl font-display font-bold text-slate-900">Team Tracking</h1><p className="text-slate-500 text-sm mt-0.5">Compliance status for your team.</p></div>
       {rows.length === 0 ? <EmptyState title="No team members" icon={<Users size={22} />} /> : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">

@@ -21,7 +21,7 @@ export default function ModuleDetail() {
           <Badge tone="slate">{m.category}</Badge>
           {m.isMandatory && <Badge tone="brand">Mandatory</Badge>}
         </div>
-        <h1 className="text-2xl font-extrabold text-slate-900">{m.title}</h1>
+        <h1 className="text-2xl font-display font-bold text-slate-900">{m.title}</h1>
         <p className="text-slate-600 mt-2">{m.description}</p>
         <div className="flex gap-6 mt-4 text-sm text-slate-500">
           <span>Passing score: <b className="text-slate-700">{m.passThreshold}%</b></span>
