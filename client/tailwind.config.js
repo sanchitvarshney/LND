@@ -39,6 +39,16 @@ export default {
           '50%': { boxShadow: '0 0 38px rgba(100,120,255,.65)' },
         },
         'spin-slow': { to: { transform: 'rotate(360deg)' } },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'check-pop': {
+          '0%': { transform: 'scale(.4)', opacity: '0' },
+          '60%': { transform: 'scale(1.15)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        ripple: {
+          '0%': { transform: 'scale(.6)', opacity: '.45' },
+          '100%': { transform: 'scale(1.8)', opacity: '0' },
+        },
       },
       animation: {
         float: 'float 7s ease-in-out infinite',
@@ -47,6 +57,9 @@ export default {
         shimmer: 'shimmer 3.2s linear infinite',
         'pulse-glow': 'pulse-glow 3.5s ease-in-out infinite',
         'spin-slow': 'spin-slow 14s linear infinite',
+        'fade-in': 'fade-in .35s ease both',
+        'check-pop': 'check-pop .5s cubic-bezier(.34,1.56,.64,1) both',
+        ripple: 'ripple 1.6s cubic-bezier(.2,.6,.4,1) infinite',
       },
     },
   },

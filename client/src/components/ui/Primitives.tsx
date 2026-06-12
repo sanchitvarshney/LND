@@ -70,3 +70,32 @@ export function EmptyState({ title, subtitle, icon }: { title: string; subtitle?
     </div>
   );
 }
+
+
+/** Skeleton loaders — quieter than a spinner for content-shaped waits. */
+export function SkeletonRow({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="card p-5 space-y-3 animate-fade-in">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} className="skeleton h-4" style={{ width: `${85 - i * 18}%` }} />
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonGrid({ cards = 3 }: { cards?: number }) {
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {Array.from({ length: cards }).map((_, i) => (
+        <div key={i} className="card overflow-hidden animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+          <div className="skeleton h-28 !rounded-none" />
+          <div className="p-4 space-y-2.5">
+            <div className="skeleton h-3.5 w-2/5" />
+            <div className="skeleton h-4 w-4/5" />
+            <div className="skeleton h-3.5 w-3/5" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

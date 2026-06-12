@@ -50,10 +50,23 @@ body {
   .glass { @apply border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl; }
   .neon-divider { background: linear-gradient(90deg, transparent, rgba(100, 120, 255, .55), transparent); height: 1px; border: 0; }
   .scene-3d { perspective: 1200px; }
+
+  /* Skeleton shimmer for loading states (dark-tinted) */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.10) 50%, rgba(255,255,255,.05) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
 }
 
 /* select dropdowns render natively — keep them dark */
 select.input option { background-color: #0e1530; color: #e3e9f8; }
+
+/* Accessible motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 
 /* Scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -71,6 +84,26 @@ video::-webkit-media-controls-timeline { display: none !important; }
    tailwind.config.js can't express (translucent fills, light "dark" text).
 --------------------------------------------------------------------------- */
 .bg-white { background-color: rgba(255, 255, 255, 0.05); }
+
+/* Slate remap, mirrored in plain CSS as a safety net: if the Tailwind config
+   ever fails to load (e.g. file corruption), text stays readable on dark. */
+.text-slate-300 { color: #3d4d78; }
+.text-slate-400 { color: #7e8db4; }
+.text-slate-500 { color: #98a6cb; }
+.text-slate-600 { color: #b3bfdd; }
+.text-slate-700 { color: #cdd6ec; }
+.text-slate-800 { color: #e3e9f8; }
+.text-slate-900 { color: #f3f6ff; }
+.fill-slate-700 { fill: #cdd6ec; }
+.fill-slate-800 { fill: #e3e9f8; }
+.bg-slate-50 { background-color: #0a0f1f; }
+.bg-slate-100 { background-color: #111a33; }
+.bg-slate-200 { background-color: #22304f; }
+.border-slate-100 { border-color: #111a33; }
+.border-slate-200 { border-color: #22304f; }
+.border-slate-300 { border-color: #3d4d78; }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #111a33; }
+.ring-slate-200 { --tw-ring-color: #22304f; }
 
 .bg-brand-50 { background-color: rgba(100, 120, 255, 0.13); }
 .bg-brand-100 { background-color: rgba(100, 120, 255, 0.18); }

@@ -10,6 +10,7 @@ interface Props {
 
 export default function SecureVideoPlayer({ video, initialStatus, onComplete }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const covered = useRef<Set<number>>(new Set());
   const maxWatched = useRef(0);              // high-water mark (seconds) — forward seeking beyond this is blocked
   const unsynced = useRef<Set<number>>(new Set());
@@ -110,7 +111,8 @@ export default function SecureVideoPlayer({ video, initialStatus, onComplete }: 
 
   return (
     <div className="card overflow-hidden">
-      <div className="relative bg-black aspect-video group">
+      <div ref={wrapRef} className="vid-fs relative bg-black aspect-video group">
+        <style>{`.vid-fs:fullscreen{width:100vw!important;height:100vh!important;aspect-ratio:auto!important;border-radius:0}.vid-fs:fullscreen>video{width:100%!important;height:100%!important;object-fit:contain}`}</style>
         <video ref={ref} src={video.sourceUrl} className="w-full h-full" onTimeUpdate={onTimeUpdate} onSeeking={onSeeking}
           onEnded={onEnded} onClick={toggle} onContextMenu={(e) => e.preventDefault()} playsInline preload="metadata" />
 
@@ -150,7 +152,7 @@ export default function SecureVideoPlayer({ video, initialStatus, onComplete }: 
             <span className="text-xs font-mono tabular-nums">{fmt(current)} / {fmt(video.durationSeconds)}</span>
             <div className="ml-auto flex items-center gap-3">
               <span className="text-xs font-semibold">{Math.round(percent)}% watched</span>
-              <button onClick={() => ref.current?.requestFullscreen?.()} className="hover:scale-110 transition"><Maximize size={17} /></button>
+              <button onClick={() => { const d = document as any; if (d.fullscreenElement) d.exitFullscreen?.(); else (wrapRef.current as any)?.requestFullscreen?.(); }} className="hover:scale-110 transition" aria-label="Toggle fullscreen"><Maximize size={17} /></button>
             </div>
           </div>
         </div>

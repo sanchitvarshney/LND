@@ -5,7 +5,8 @@ import { Badge, Spinner } from '../components/ui/Primitives';
 import { TYPE_LABEL } from '../components/QuestionRenderer';
 import { isYouTube } from '../lib/video';
 import { fetchYouTubeDuration } from '../lib/youtubeApi';
-import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2 } from 'lucide-react';
+import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2, Sparkles } from 'lucide-react';
+import { useAiStatus, generateQuestions } from '../lib/ai';
 
 const ROLE_TONE: any = { admin: 'brand', manager: 'amber', learner: 'slate', super_admin: 'brand' };
 
@@ -251,6 +252,28 @@ function QuestionModal({ module, onClose, onSaved }: any) {
   const [explanation, setExplanation] = useState('');
   const [options, setOptions] = useState([{ id: 'a', label: '', isCorrect: false }, { id: 'b', label: '', isCorrect: false }]);
   const [shortVal, setShortVal] = useState('');
+  const { enabled: aiEnabled } = useAiStatus();
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiDrafts, setAiDrafts] = useState<any[]>([]);
+  const [aiError, setAiError] = useState('');
+
+  const draftWithAi = async () => {
+    setAiBusy(true); setAiError('');
+    try {
+      const aid = (await api.get(`/modules/${module.id}`)).data.data.assessment.id;
+      setAiDrafts(await generateQuestions(aid, 5));
+    } catch (e: any) {
+      setAiError(e?.response?.data?.error || 'Could not generate drafts.');
+    } finally { setAiBusy(false); }
+  };
+
+  const useDraft = (d: any) => {
+    setType(d.type); setPrompt(d.prompt); setExplanation(d.explanation || '');
+    if (d.type === 'mcq' || d.type === 'multi_select') setOptions(d.options || []);
+    else if (d.type === 'true_false') setShortVal(d.options?.find((o: any) => o.isCorrect)?.id || 'true');
+    else if (d.type === 'short_answer') setShortVal(d.answerKey?.value || '');
+    setAiDrafts(aiDrafts.filter((x) => x !== d));
+  };
 
   const m = useMutation({
     mutationFn: async () => {
@@ -268,6 +291,32 @@ function QuestionModal({ module, onClose, onSaved }: any) {
   return (
     <Modal title={`Add question · ${module.title}`} onClose={onClose}>
       <div className="space-y-3">
+        {aiEnabled && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                <span className="h-6 w-6 rounded-md grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><Sparkles size={12} /></span>
+                AI question drafts
+              </div>
+              <button onClick={draftWithAi} disabled={aiBusy} className="btn-ghost !py-1.5 !px-3 text-xs">
+                {aiBusy ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />} {aiDrafts.length ? 'Regenerate' : 'Draft 5 questions'}
+              </button>
+            </div>
+            {aiError && <p className="text-xs text-red-600 mt-2">{aiError}</p>}
+            {aiDrafts.length > 0 && (
+              <div className="mt-2.5 space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                {aiDrafts.map((d, i) => (
+                  <div key={i} className="flex items-start gap-2 rounded-lg border border-white/10 px-2.5 py-2">
+                    <span className="chip bg-brand-50 text-brand-700 ring-1 ring-brand-200 shrink-0 !text-[10px]">{TYPE_LABEL[d.type]}</span>
+                    <span className="flex-1 text-xs text-slate-600 leading-snug">{d.prompt}</span>
+                    <button onClick={() => useDraft(d)} className="text-xs text-brand-600 font-semibold hover:underline shrink-0">Use</button>
+                  </div>
+                ))}
+                <p className="text-[10px] text-slate-400 pt-0.5">Click "Use" to load a draft into the form below — review before saving.</p>
+              </div>
+            )}
+          </div>
+        )}
         <div><label className="label">Question type</label>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(TYPE_LABEL).map(([k, v]) => (

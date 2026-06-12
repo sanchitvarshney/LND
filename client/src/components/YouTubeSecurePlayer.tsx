@@ -171,8 +171,11 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
   return (
     <div className="card overflow-hidden">
       <div ref={containerRef} className="yt-fs relative bg-black aspect-video group">
-        <style>{`.yt-fs:fullscreen{width:100vw;height:100vh;aspect-ratio:auto}.yt-fs:fullscreen>div,.yt-fs:fullscreen iframe{width:100%!important;height:100%!important}`}</style>
-        <div ref={hostRef} className="w-full h-full pointer-events-none" />
+        {/* Fullscreen sizing is scoped to the player host + iframe ONLY —
+            a broad `>div` selector would also stretch the badge/banner overlays
+            into screen-covering sheets (the "red screen" bug). */}
+        <style>{`.yt-fs:fullscreen{width:100vw!important;height:100vh!important;aspect-ratio:auto!important;border-radius:0}.yt-fs:fullscreen .yt-host{width:100%!important;height:100%!important}.yt-fs:fullscreen .yt-host iframe,.yt-fs:fullscreen>iframe{width:100%!important;height:100%!important}`}</style>
+        <div ref={hostRef} className="yt-host w-full h-full pointer-events-none" />
 
         {/* Click-catcher: intercepts all interaction so YouTube's own UI can't be used to skip */}
         <button aria-label="Play/pause" onClick={toggle} className="absolute inset-0 z-10 cursor-pointer" onContextMenu={(e) => e.preventDefault()} />
@@ -215,7 +218,7 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
             <span className="text-xs font-mono tabular-nums">{fmt(current)} / {fmt(video.durationSeconds)}</span>
             <div className="ml-auto flex items-center gap-3">
               <span className="text-xs font-semibold">{Math.round(percent)}% watched</span>
-              <button onClick={goFullscreen} className="hover:scale-110 transition"><Maximize size={17} /></button>
+              <button onClick={goFullscreen} className="hover:scale-110 transition" aria-label="Toggle fullscreen"><Maximize size={17} /></button>
             </div>
           </div>
         </div>

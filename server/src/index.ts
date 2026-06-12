@@ -10,6 +10,7 @@ import assessmentRoutes from './routes/assessments.js';
 import certificateRoutes from './routes/certificates.js';
 import adminRoutes from './routes/admin.js';
 import publicRoutes from './routes/public.js';
+import aiRoutes from './routes/ai.js';
 import { initDb } from './db.js';
 import { bootstrapFirstAdmin } from './seed.js';
 
@@ -43,6 +44,7 @@ app.use('/api/v1', progressRoutes);
 app.use('/api/v1', assessmentRoutes);
 app.use('/api/v1', certificateRoutes);
 app.use('/api/v1', adminRoutes);
+app.use('/api/v1', aiRoutes);
 
 // Optionally serve a built frontend from the same origin (if present).
 const clientDist = process.env.CLIENT_DIST || path.join(__dirname, '..', '..', 'client', 'dist');
@@ -57,7 +59,8 @@ if (fs.existsSync(clientDist)) {
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
+  const status = Number(err?.status) || 500;
+  res.status(status).json({ error: status === 503 ? 'AI is not configured on this server' : status === 502 ? 'AI provider request failed' : 'Internal server error' });
 });
 
 initDb()

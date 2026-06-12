@@ -7,6 +7,7 @@ import SecureVideoPlayer from '../components/SecureVideoPlayer';
 import YouTubeSecurePlayer from '../components/YouTubeSecurePlayer';
 import { isYouTube } from '../lib/video';
 import { ArrowLeft, CheckCircle2, ChevronRight, ShieldCheck } from 'lucide-react';
+import AiAssistant from '../components/AiAssistant';
 
 export default function Player() {
   const { id } = useParams();
@@ -58,6 +59,7 @@ export default function Player() {
           )}
         </div>
       </div>
+      <AiAssistant moduleId={m.id} moduleTitle={m.title} />
     </div>
   );
 }

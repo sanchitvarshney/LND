@@ -2,7 +2,38 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Spinner } from '../components/ui/Primitives';
-import { CheckCircle2, XCircle, Award, RotateCcw, Check, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Award, RotateCcw, Check, X, Sparkles, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { useAiStatus, getReviewPlan } from '../lib/ai';
+
+function AiReviewPlan({ attemptId }: { attemptId: string }) {
+  const { enabled } = useAiStatus();
+  const [plan, setPlan] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (!enabled) return null;
+  const run = async () => {
+    setBusy(true); setError('');
+    try { setPlan(await getReviewPlan(attemptId)); }
+    catch (e: any) { setError(e?.response?.data?.error || 'Could not generate a review plan.'); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="card p-6 animate-fade-up">
+      <h2 className="font-bold text-slate-800 flex items-center gap-2 mb-1">
+        <span className="h-7 w-7 rounded-lg grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><Sparkles size={14} /></span>
+        Your personal review plan
+      </h2>
+      {!plan && !busy && (<>
+        <p className="text-sm text-slate-500 mb-4">Let AI analyze what went wrong and point you to the exact videos to review before your retake.</p>
+        <button onClick={run} className="btn-primary"><Sparkles size={15} /> Build my review plan</button>
+      </>)}
+      {busy && <div className="flex items-center gap-2 text-slate-400 text-sm py-2"><Loader2 size={15} className="animate-spin" /> Analyzing your answers…</div>}
+      {plan && <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed mt-2">{plan}</p>}
+      {error && <div className="text-xs text-red-700 bg-red-50 ring-1 ring-red-200 rounded-lg px-3 py-2 mt-2">{error}</div>}
+    </div>
+  );
+}
 
 export default function Result() {
   const { id } = useParams();
@@ -13,18 +44,27 @@ export default function Result() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <div className={`card p-8 text-center ${passed ? 'ring-2 ring-emerald-200 shadow-glow-emerald' : ''}`}>
-        <div className={`mx-auto h-16 w-16 rounded-full grid place-items-center ${passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-          {passed ? <CheckCircle2 size={34} /> : <XCircle size={34} />}
+      <div className={`card p-10 text-center overflow-hidden relative animate-fade-up ${passed ? 'ring-2 ring-emerald-200 shadow-glow-emerald' : ''}`}>
+        <div className="relative mx-auto h-20 w-20">
+          {passed && <span className="absolute inset-0 rounded-full bg-emerald-400/30 animate-ripple" />}
+          {passed && <span className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ripple" style={{ animationDelay: '.5s' }} />}
+          <div className={`relative h-20 w-20 rounded-full grid place-items-center animate-check-pop ${passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+            {passed ? <CheckCircle2 size={42} strokeWidth={2.2} /> : <XCircle size={42} strokeWidth={2.2} />}
+          </div>
         </div>
-        <h1 className="text-2xl font-display font-bold text-slate-900 mt-4">{passed ? 'Congratulations — you passed!' : 'Not quite there yet'}</h1>
-        <p className="text-slate-500 mt-1">You scored <b className="text-slate-800">{data.score}%</b>{passed ? '.' : ` — you need ${state.passingScore ?? ''}% to pass.`}</p>
-        <div className="mt-6 flex justify-center gap-3">
+        <h1 className="text-2xl font-display font-bold text-slate-900 mt-5">{passed ? 'Congratulations — you passed!' : 'Not quite there yet'}</h1>
+        <p className="text-slate-500 mt-1.5">
+          You scored <b className={passed ? 'text-emerald-600' : 'text-slate-800'}>{data.score}%</b>
+          {passed ? '. Your certificate has been issued.' : ` — you need ${state.passingScore ?? ''}% to pass. Review the material and try again.`}
+        </p>
+        <div className="mt-7 flex justify-center gap-3">
           {passed && state.certificateId && <Link to={`/certificates/${state.certificateId}`} className="btn-primary"><Award size={17} /> View certificate</Link>}
           {!passed && <Link to={`/modules/${state.moduleId || ''}`} className="btn-primary"><RotateCcw size={16} /> Retry training</Link>}
           <Link to="/" className="btn-ghost">Back to dashboard</Link>
         </div>
       </div>
+
+      {!passed && <AiReviewPlan attemptId={data.id} />}
 
       <div className="card p-6">
         <h2 className="font-bold text-slate-800 mb-4">Answer review</h2>

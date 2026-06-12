@@ -34,7 +34,7 @@ export default function TiltCard({ children, className = '', max = 8 }: { childr
       className={`relative will-change-transform transition-transform duration-200 ease-out ${className}`}
       style={{ transformStyle: 'preserve-3d' }}>
       {children}
-      <div ref={glare} className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300" />
+      <div ref={glare} className="pointer-events-none absolute inset-0 rounnded-2xl opacity-0 transition-opacity duration-300" />
     </div>
   );
 }

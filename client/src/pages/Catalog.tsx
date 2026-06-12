@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Badge, Spinner, EmptyState } from '../components/ui/Primitives';
+import { Badge, SkeletonGrid, EmptyState } from '../components/ui/Primitives';
 import TiltCard from '../components/ui/TiltCard';
 import { BookOpen, Film, HelpCircle, ShieldCheck, Cpu, Flame, Lock } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const BANNERS = [
 
 export default function Catalog() {
   const { data, isLoading } = useQuery({ queryKey: ['modules'], queryFn: async () => (await api.get('/modules')).data.data });
-  if (isLoading) return <div className="grid place-items-center py-20"><Spinner /></div>;
+  if (isLoading) return <div className="space-y-6"><div className="skeleton h-9 w-72" /><SkeletonGrid cards={6} /></div>;
   const mods = data || [];
 
   return (

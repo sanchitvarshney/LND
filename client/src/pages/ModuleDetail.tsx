@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Badge, Spinner } from '../components/ui/Primitives';
 import { ArrowLeft, Film, CheckCircle2, Lock, PlayCircle, FileQuestion } from 'lucide-react';
+import AiAssistant from '../components/AiAssistant';
 
 export default function ModuleDetail() {
   const { id } = useParams();
@@ -60,6 +61,7 @@ export default function ModuleDetail() {
           <Link to={`/modules/${id}/player`} className="btn-primary"><PlayCircle size={17} /> {m.videos.some((v: any) => v.progress?.percentComplete > 0) ? 'Resume training' : 'Start training'}</Link>
         )}
       </div>
+      <AiAssistant moduleId={m.id} moduleTitle={m.title} />
     </div>
   );
 }
