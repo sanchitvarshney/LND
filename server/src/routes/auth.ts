@@ -76,4 +76,31 @@ router.post('/setup', async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+
+// --- Self-service profile (supportive pages) ---
+const profileSchema = z.object({ fullName: z.string().min(1).max(120).optional(), department: z.string().max(120).optional() });
+router.patch('/me', requireAuth, async (req, res) => {
+  const p = profileSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input' });
+  const data: any = {};
+  if (p.data.fullName !== undefined) data.fullName = p.data.fullName;
+  if (p.data.department !== undefined) data.department = p.data.department;
+  const user = await prisma.user.update({ where: { id: req.user!.sub }, data });
+  await audit(req, 'profile.update', 'user', user.id);
+  res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department });
+});
+
+const pwSchema = z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(8) });
+router.post('/change-password', requireAuth, async (req, res) => {
+  const p = pwSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  const user = await prisma.user.findUnique({ where: { id: req.user!.sub } });
+  if (!user || !bcrypt.compareSync(p.data.currentPassword, user.passwordHash)) {
+    return res.status(401).json({ error: 'Current password is incorrect.' });
+  }
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: bcrypt.hashSync(p.data.newPassword, 10) } });
+  await audit(req, 'profile.change_password', 'user', user.id);
+  res.json({ ok: true });
+});
+
 export default router;

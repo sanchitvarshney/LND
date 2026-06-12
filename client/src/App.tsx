@@ -17,6 +17,9 @@ import Reports from './pages/Reports';
 import Audit from './pages/Audit';
 import Admin from './pages/Admin';
 import Verify from './pages/Verify';
+import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
+import Help from './pages/Help';
 import Setup from './pages/Setup';
 
 function Protected({ children, roles }: { children: JSX.Element; roles?: string[] }) {
@@ -40,6 +43,9 @@ export default function App() {
       <Route path="/setup" element={<Setup />} />
       <Route path="/verify/:hash" element={<Verify />} />
       <Route path="/" element={<Protected><Home /></Protected>} />
+      <Route path="/profile" element={<Protected><Profile /></Protected>} />
+      <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+      <Route path="/help" element={<Protected><Help /></Protected>} />
       <Route path="/catalog" element={<Protected><Catalog /></Protected>} />
       <Route path="/modules/:id" element={<Protected><ModuleDetail /></Protected>} />
       <Route path="/modules/:id/player" element={<Protected><Player /></Protected>} />

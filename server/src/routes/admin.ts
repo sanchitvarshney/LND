@@ -64,6 +64,11 @@ router.get('/notifications', async (req, res) => {
   const notes = await prisma.notification.findMany({ where: { userId: req.user!.sub }, orderBy: { createdAt: 'desc' }, take: 20 });
   res.json({ data: notes });
 });
+router.post('/notifications/read-all', async (req, res) => {
+  await prisma.notification.updateMany({ where: { userId: req.user!.sub, readAt: null }, data: { readAt: new Date() } });
+  res.json({ ok: true });
+});
+
 router.post('/notifications/:id/read', async (req, res) => {
   await prisma.notification.updateMany({ where: { id: req.params.id, userId: req.user!.sub }, data: { readAt: new Date() } });
   res.json({ ok: true });

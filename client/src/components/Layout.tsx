@@ -1,7 +1,9 @@
 import { ReactNode, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../lib/api';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { LayoutDashboard, BookOpen, Users, BarChart3, Award, ShieldCheck, LogOut, Menu, GraduationCap, FileText } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, BarChart3, Award, ShieldCheck, LogOut, Menu, GraduationCap, FileText, Bell, LifeBuoy } from 'lucide-react';
 import Background3D from './ui/Background3D';
 
 const NAV: Record<string, { to: string; label: string; icon: any }[]> = {
@@ -30,6 +32,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const items = NAV[user?.role === 'super_admin' ? 'admin' : (user?.role || 'learner')] || NAV.learner;
+  // unread notifications badge (refreshes every minute)
+  const { data: notes } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => (await api.get('/notifications')).data.data,
+    refetchInterval: 60000, retry: false,
+  });
+  const unread = (notes || []).filter((n: any) => !n.readAt).length;
 
   return (
     <div className="min-h-screen lg:flex">
@@ -62,10 +71,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="p-3 border-t border-white/[0.07]">
-          <div className="glass rounded-xl px-3 py-2.5 mb-2">
+          <Link to="/profile" onClick={() => setOpen(false)} className="block glass rounded-xl px-3 py-2.5 mb-2 transition hover:border-brand-400/40" title="My profile">
             <div className="text-sm font-semibold text-slate-800 truncate">{user?.fullName}</div>
-            <div className="text-xs text-slate-400 capitalize">{user?.role?.replace('_', ' ')}</div>
-          </div>
+            <div className="text-xs text-slate-400 capitalize">{user?.role?.replace('_', ' ')} · View profile</div>
+          </Link>
+          <NavLink to="/help" onClick={() => setOpen(false)}
+            className={({ isActive }) => `w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? 'text-slate-900 bg-white/[0.06]' : 'text-slate-500 hover:bg-white/[0.05] hover:text-slate-800'}`}>
+            <LifeBuoy size={18} /> Help &amp; Support
+          </NavLink>
           <button onClick={() => { logout(); nav('/login'); }} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-700 transition">
             <LogOut size={18} /> Sign out
           </button>
@@ -79,11 +92,21 @@ export default function Layout({ children }: { children: ReactNode }) {
           <button className="lg:hidden btn-ghost !px-2 !py-2" onClick={() => setOpen(true)}><Menu size={18} /></button>
           <div className="hidden lg:block text-sm text-slate-400">Enterprise Learning &amp; Compliance</div>
           <div className="flex items-center gap-3">
+            <Link to="/notifications" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+              className="relative h-9 w-9 rounded-xl grid place-items-center text-slate-500 border border-white/10 bg-white/5 transition hover:text-slate-900 hover:border-white/20">
+              <Bell size={17} />
+              {unread > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white shadow-glow"
+                  style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)' }}>
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+            </Link>
             <span className="chip bg-brand-50 text-brand-700 ring-1 ring-brand-200 capitalize">{user?.role?.replace('_', ' ')}</span>
-            <div className="h-9 w-9 rounded-full text-white grid place-items-center text-sm font-bold shadow-glow ring-2 ring-white/15"
+            <Link to="/profile" title="My profile" className="h-9 w-9 rounded-full text-white grid place-items-center text-sm font-bold shadow-glow ring-2 ring-white/15 transition hover:scale-105"
               style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)' }}>
               {user?.fullName?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-            </div>
+            </Link>
           </div>
         </header>
         <main className="p-5 lg:p-8 max-w-7xl mx-auto animate-fade-up">{children}</main>
