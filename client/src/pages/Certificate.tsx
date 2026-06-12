@@ -33,6 +33,7 @@ export default function Certificate() {
           <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full" style={{ background: 'rgba(99,102,241,.10)' }} />
           <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full" style={{ background: 'rgba(34,211,238,.10)' }} />
           <div className="relative text-center">
+            <img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="mx-auto h-9 w-auto mb-6" />
             <div className="mx-auto h-14 w-14 rounded-xl grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#4f46e5,#06b6d4)' }}><Award size={28} /></div>
             <p className="mt-4 text-xs font-bold tracking-[0.3em] uppercase" style={{ color: '#4f46e5' }}>Certificate of Completion</p>
             <h1 className="mt-4 text-sm" style={{ color: '#64748b' }}>This certifies that</h1>

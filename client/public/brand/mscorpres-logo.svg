@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 132" fill="none" font-family="'Space Grotesk','Segoe UI',Arial,sans-serif">
+  <g transform="translate(8,22)">
+    <path d="M8 86 L26 8 L42 8 L60 50 L78 8 L94 8 L112 86 L92 86 L82 40 L60 84 L38 40 L28 86 Z" fill="#13a39a"/>
+    <path d="M42 8 L60 50 L50 73 L30 22 Z" fill="#111418"/>
+  </g>
+  <text x="150" y="70" font-size="50" font-weight="700" fill="#13a39a" letter-spacing="0.3">MsCorpres Automation</text>
+  <text x="152" y="105" font-size="22" font-weight="700" fill="#111418" letter-spacing="3.2">Expert in Execution</text>
+</svg>

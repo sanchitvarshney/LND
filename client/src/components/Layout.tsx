@@ -38,10 +38,11 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className={`fixed lg:sticky lg:top-0 lg:h-screen z-40 inset-y-0 left-0 w-64 flex flex-col transition-transform border-r border-white/[0.07] bg-[#0a0f20]/90 backdrop-blur-2xl ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="h-16 flex items-center gap-2.5 px-5 border-b border-white/[0.07]">
-          <div className="h-9 w-9 rounded-xl grid place-items-center text-white shadow-glow" style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}>
-            <GraduationCap size={18} />
+          <img src="/brand/mscorpres-mark-light.svg" alt="MsCorpres Automation" className="h-8 w-auto" />
+          <div className="leading-tight">
+            <div className="font-display font-bold tracking-tight text-[15px] text-white">L&amp;D Portal</div>
+            <div className="text-[10px] font-medium text-slate-400 tracking-wide">MsCorpres Automation</div>
           </div>
-          <div className="font-display font-bold tracking-tight text-lg text-slate-900">LearnGuard</div>
         </div>
         <nav className="flex-1 p-3 space-y-1.5">
           {items.map((it) => (

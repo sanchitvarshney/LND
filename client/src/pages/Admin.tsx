@@ -5,7 +5,7 @@ import { Badge, Spinner } from '../components/ui/Primitives';
 import { TYPE_LABEL } from '../components/QuestionRenderer';
 import { isYouTube } from '../lib/video';
 import { fetchYouTubeDuration } from '../lib/youtubeApi';
-import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2, Sparkles } from 'lucide-react';
+import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2, Sparkles, KeyRound } from 'lucide-react';
 import { useAiStatus, generateQuestions } from '../lib/ai';
 
 const ROLE_TONE: any = { admin: 'brand', manager: 'amber', learner: 'slate', super_admin: 'brand' };
@@ -19,6 +19,7 @@ export default function Admin() {
   const [qFor, setQFor] = useState<any>(null);
   const [vFor, setVFor] = useState<any>(null);
   const [aFor, setAFor] = useState<any>(null);
+  const [pwFor, setPwFor] = useState<any>(null);
 
   const refreshModules = () => qc.invalidateQueries({ queryKey: ['adminModules'] });
   const refreshUsers = () => qc.invalidateQueries({ queryKey: ['adminUsers'] });
@@ -61,7 +62,7 @@ export default function Admin() {
         <div className="card overflow-hidden">
           {(users || []).length === 0 ? <div className="p-8 text-center text-slate-400 text-sm">Only your admin account exists. Click &ldquo;New user&rdquo; to add learners and managers.</div> : (
             <table className="w-full text-sm">
-              <thead><tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500 uppercase"><th className="px-5 py-3">Name</th><th className="px-5 py-3">Email</th><th className="px-5 py-3">Role</th><th className="px-5 py-3">Department</th></tr></thead>
+              <thead><tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500 uppercase"><th className="px-5 py-3">Name</th><th className="px-5 py-3">Email</th><th className="px-5 py-3">Role</th><th className="px-5 py-3">Department</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
               <tbody>
                 {(users || []).map((u: any) => (
                   <tr key={u.id} className="border-t border-slate-100">
@@ -69,6 +70,7 @@ export default function Admin() {
                     <td className="px-5 py-3 text-slate-600">{u.email}</td>
                     <td className="px-5 py-3"><Badge tone={ROLE_TONE[u.role] || 'slate'}>{u.role}</Badge></td>
                     <td className="px-5 py-3 text-slate-500">{u.department || '—'}</td>
+                    <td className="px-5 py-3 text-right"><button onClick={() => setPwFor(u)} className="btn-ghost !py-1.5 text-xs"><KeyRound size={14} /> Password</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -82,6 +84,7 @@ export default function Admin() {
       {qFor && <QuestionModal module={qFor} onClose={() => setQFor(null)} onSaved={() => { setQFor(null); refreshModules(); }} />}
       {vFor && <VideoModal module={vFor} onClose={() => setVFor(null)} onSaved={() => { setVFor(null); refreshModules(); }} />}
       {aFor && <AssignModal module={aFor} users={(users || []).filter((u: any) => u.role === 'learner' || u.role === 'manager')} onClose={() => setAFor(null)} onSaved={() => setAFor(null)} />}
+      {pwFor && <PasswordModal user={pwFor} onClose={() => setPwFor(null)} onSaved={() => setPwFor(null)} />}
     </div>
   );
 }
@@ -152,6 +155,34 @@ function UserModal({ onClose, onSaved, users }: any) {
         )}
         {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not create user.'}</p>}
         <button onClick={() => m.mutate()} disabled={m.isPending || !f.fullName || !f.email || f.password.length < 8} className="btn-primary w-full">Create user</button>
+      </div>
+    </Modal>
+  );
+}
+
+function PasswordModal({ user, onClose, onSaved }: any) {
+  const [pw, setPw] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [done, setDone] = useState(false);
+  const m = useMutation({
+    mutationFn: () => api.patch(`/users/${user.id}/password`, { password: pw }),
+    onSuccess: () => { setDone(true); setTimeout(onSaved, 800); },
+  });
+  const tooShort = pw.length < 8;
+  const mismatch = confirm.length > 0 && pw !== confirm;
+  return (
+    <Modal title={`Set password \u00b7 ${user.fullName}`} onClose={onClose}>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-500">Set a new password for <b className="text-slate-700">{user.email}</b>. They can sign in with it immediately.</p>
+        <div><label className="label">New password</label><input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 8 characters" /></div>
+        <div><label className="label">Confirm password</label><input className="input" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></div>
+        {mismatch && <p className="text-sm text-red-600">Passwords do not match.</p>}
+        {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not update password.'}</p>}
+        {done ? (
+          <p className="text-sm text-emerald-600 flex items-center gap-1"><Check size={15} /> Password updated.</p>
+        ) : (
+          <button onClick={() => m.mutate()} disabled={m.isPending || tooShort || mismatch || !confirm} className="btn-primary w-full"><KeyRound size={16} /> Update password</button>
+        )}
       </div>
     </Modal>
   );

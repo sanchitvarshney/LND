@@ -97,4 +97,16 @@ router.post('/users', requireRole('admin'), async (req, res) => {
   res.status(201).json({ data: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department } });
 });
 
+// Admin: change/reset a user's password
+const setPasswordSchema = z.object({ password: z.string().min(8) });
+router.patch('/users/:id/password', requireRole('admin'), async (req, res) => {
+  const p = setPasswordSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: bcrypt.hashSync(p.data.password, 10) } });
+  await audit(req, 'user.password_reset', 'user', user.id, {});
+  res.json({ data: { id: user.id, email: user.email } });
+});
+
 export default router;

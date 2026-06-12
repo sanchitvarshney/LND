@@ -40,15 +40,11 @@ export default function Login() {
         {/* Brand panel */}
         <div className="hidden lg:flex flex-col justify-between p-14">
           <div className="flex items-center gap-3 animate-fade-up">
-            <div className="h-11 w-11 rounded-2xl grid place-items-center text-white shadow-glow-lg animate-pulse-glow"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}>
-              <GraduationCap size={22} />
-            </div>
-            <span className="font-display font-bold text-2xl text-slate-900 tracking-tight">LearnGuard</span>
+            <img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="h-11 w-auto" />
           </div>
 
           <div>
-            <div className="chip glass text-brand-300 mb-6 animate-fade-up"><Sparkles size={13} /> Next-gen training platform</div>
+            <div className="chip glass text-brand-300 mb-6 animate-fade-up"><Sparkles size={13} /> Learning &amp; Development Portal</div>
             <h1 className="text-5xl font-display font-bold leading-[1.1] text-slate-900 animate-fade-up" style={{ animationDelay: '.08s' }}>
               Compliance training,<br /><span className="gradient-text">provably complete.</span>
             </h1>
@@ -64,16 +60,15 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="text-xs text-slate-400">© 2026 LearnGuard · Enterprise L&amp;D</div>
+          <div className="text-xs text-slate-400">© 2026 MsCorpres Automation · Learning &amp; Development Portal</div>
         </div>
 
         {/* Form */}
         <div className="flex items-center justify-center p-6">
           <TiltCard max={4} className="w-full max-w-md">
             <div className="card p-8 sm:p-10 shadow-soft animate-fade-up">
-              <div className="lg:hidden flex items-center gap-2.5 mb-8">
-                <div className="h-10 w-10 rounded-xl grid place-items-center text-white shadow-glow" style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}><GraduationCap size={20} /></div>
-                <span className="font-display font-bold text-xl text-slate-900">LearnGuard</span>
+              <div className="lg:hidden flex items-center mb-8">
+                <img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="h-9 w-auto" />
               </div>
               <h2 className="text-2xl font-display font-bold text-slate-900">Welcome back</h2>
               <p className="text-slate-500 text-sm mt-1 mb-7">Sign in to continue your training journey.</p>

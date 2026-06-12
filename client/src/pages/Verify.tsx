@@ -14,7 +14,7 @@ export default function Verify() {
     <div className="min-h-screen grid place-items-center p-6 relative overflow-hidden">
       <Background3D density={0.9} />
       <div className="w-full max-w-md relative z-10">
-        <div className="flex items-center justify-center gap-2 mb-6"><div className="h-9 w-9 rounded-xl text-white grid place-items-center shadow-glow" style={{ background: 'linear-gradient(135deg,#6366f1,#22d3ee)' }}><GraduationCap size={20} /></div><span className="font-display font-bold text-xl text-slate-900">LearnGuard</span></div>
+        <div className="flex items-center justify-center mb-6"><img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="h-10 w-auto" /></div>
         <div className="card p-8 text-center">
           {isLoading ? <Spinner /> : (error || !data?.valid) ? (
             <>
