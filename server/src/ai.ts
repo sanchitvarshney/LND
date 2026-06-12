@@ -1,19 +1,38 @@
 /**
- * AI provider layer — Anthropic Messages API over plain fetch (no SDK dependency).
+ * AI provider layer — FREE providers only, via the OpenAI-compatible
+ * Chat Completions API. No SDK dependency (plain fetch). No paid services.
  *
- * Configure with:
- *   AI_API_KEY   = your Anthropic API key (required to enable AI features)
- *   AI_MODEL     = optional model override (default: claude-haiku-4-5-20251001)
+ * Recommended free providers (pick ONE, set the env vars below):
+ *   Groq   (default) — free key at https://console.groq.com  (fast, no card)
+ *   Gemini           — free tier at https://aistudio.google.com (no card)
  *
- * Every endpoint degrades gracefully when no key is configured: the client
- * shows a "not configured" hint instead of broken UI.
+ * Configure with env vars:
+ *   AI_API_KEY    your FREE provider key. Leave empty and AI features just stay
+ *                 hidden — the rest of the app works at zero cost.
+ *   AI_BASE_URL   API base. Default: https://api.groq.com/openai/v1
+ *   AI_MODEL      model id.  Default: llama-3.3-70b-versatile
+ *
+ * Every endpoint degrades gracefully when no key is configured.
  */
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+const DEFAULT_BASE_URL = 'https://api.groq.com/openai/v1'; // Groq free tier
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+
+function apiKey(): string | undefined {
+  return process.env.AI_API_KEY;
+}
+
+function baseUrl(): string {
+  const b = (process.env.AI_BASE_URL || '').trim().replace(/\/+$/, '');
+  return b || DEFAULT_BASE_URL;
+}
+
+function model(): string {
+  return process.env.AI_MODEL || DEFAULT_MODEL;
+}
 
 export function aiEnabled(): boolean {
-  return !!(process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY);
+  return !!apiKey();
 }
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
@@ -24,22 +43,17 @@ export async function complete(opts: {
   maxTokens?: number;
   temperature?: number;
 }): Promise<string> {
-  const key = process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY;
+  const key = apiKey();
   if (!key) throw Object.assign(new Error('AI is not configured'), { status: 503 });
 
-  const res = await fetch(API_URL, {
+  const res = await fetch(`${baseUrl()}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: process.env.AI_MODEL || DEFAULT_MODEL,
+      model: model(),
       max_tokens: opts.maxTokens ?? 700,
       temperature: opts.temperature ?? 0.4,
-      system: opts.system,
-      messages: opts.messages,
+      messages: [{ role: 'system', content: opts.system }, ...opts.messages],
     }),
   });
 
@@ -49,7 +63,7 @@ export async function complete(opts: {
     throw Object.assign(new Error('AI provider request failed'), { status: 502 });
   }
   const data: any = await res.json();
-  return (data.content || []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('\n').trim();
+  return (data.choices?.[0]?.message?.content || '').trim();
 }
 
 /** Ask for strict JSON and parse it (tolerates code fences). */

@@ -1,15 +1,23 @@
 # LearnGuard AI Features
 
 Four production AI features, all grounded in data the platform already captures.
-Powered by the Anthropic API — works with the zero-setup file store and Prisma alike.
+Powered by **free**, OpenAI-compatible providers (Groq or Google Gemini) — works with the
+zero-setup file store and Prisma alike. No paid service required.
 
 ## Enable
 
 Add to `server/.env`:
 
 ```
-AI_API_KEY="sk-ant-..."        # required
-# AI_MODEL="claude-haiku-4-5-20251001"   # optional override
+# Groq free tier (default — get a free key at https://console.groq.com, no card)
+AI_API_KEY="gsk_..."                                  # required to enable AI
+AI_BASE_URL="https://api.groq.com/openai/v1"          # default
+AI_MODEL="llama-3.3-70b-versatile"                    # default
+
+# …or Google Gemini free tier (https://aistudio.google.com):
+# AI_API_KEY="AIza..."
+# AI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai"
+# AI_MODEL="gemini-2.0-flash"
 ```
 
 No key = everything degrades gracefully (AI UI simply doesn't render; `GET /api/v1/ai/status` returns `enabled:false`).
@@ -28,4 +36,4 @@ No key = everything degrades gracefully (AI UI simply doesn't render; `GET /api/
 - All endpoints require auth; role checks mirror the rest of the API (generator = admin, digest = manager+).
 - AI usage is audit-logged (`ai.generate_questions`, `ai.review_plan`).
 - The assistant is instructed to never reveal assessment questions/answers and to redirect off-topic chats.
-- Server calls Anthropic directly over fetch — no SDK dependency added.
+- Server calls the provider's OpenAI-compatible endpoint directly over fetch — no SDK dependency, and only free providers are configured.
