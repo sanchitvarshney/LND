@@ -29,7 +29,7 @@ export default function Player() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-display font-bold text-slate-900">{video.title}</h1>
+          <h1 className="text-xl font-extrabold text-slate-900">{video.title}</h1>
           <span className="text-sm text-slate-400">Video {idx + 1} of {m.videos.length}</span>
         </div>
         {isYouTube(video.sourceUrl) ? (

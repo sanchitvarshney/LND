@@ -2,76 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
-* { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+:root { color-scheme: dark; }
+* { -webkit-font-smoothing: antialiased; }
 
 body {
-  @apply text-slate-700 font-sans;
+  @apply text-slate-800 font-sans;
   margin: 0;
-  background-color: #f7f9fa;
+  background-color: #070b18;
   background-image:
-    radial-gradient(900px 420px at 92% -8%, rgba(4, 176, 168, 0.055), transparent 60%),
-    radial-gradient(720px 420px at -6% 30%, rgba(2, 8, 23, 0.025), transparent 55%);
+    radial-gradient(1100px 520px at 85% -10%, rgba(85, 96, 248, 0.16), transparent 60%),
+    radial-gradient(900px 480px at -10% 25%, rgba(34, 211, 238, 0.10), transparent 60%),
+    radial-gradient(800px 600px at 50% 115%, rgba(167, 139, 250, 0.12), transparent 60%);
   background-attachment: fixed;
   min-height: 100vh;
 }
 
-/* MSCorpres slab headings get tighter, confident rhythm */
-.font-display { letter-spacing: -0.01em; }
-
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[.985]; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-400/60 focus:ring-offset-2 focus:ring-offset-[#070b18] disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary {
-    @apply btn text-white shadow-glow hover:shadow-glow-lg hover:-translate-y-px;
-    background-image: linear-gradient(135deg, #06bcb2, #04b0a8 45%, #029a91);
+    @apply btn text-white shadow-glow hover:shadow-glow-lg hover:-translate-y-0.5 active:translate-y-0;
+    background-image: linear-gradient(135deg, #6366f1 0%, #7c5cf6 55%, #9333ea 100%);
   }
-  .btn-primary:hover { background-image: linear-gradient(135deg, #04b0a8, #03938c 50%, #017b75); }
-  .btn-ghost { @apply btn bg-white text-slate-700 border border-slate-200 shadow-card hover:border-brand-300 hover:text-brand-800 hover:-translate-y-px; }
+  .btn-ghost { @apply btn text-slate-700 border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5; }
   .btn-success {
-    @apply btn text-white shadow-glow-emerald hover:-translate-y-px;
-    background-image: linear-gradient(135deg, #10b981, #059669);
+    @apply btn text-white hover:-translate-y-0.5;
+    background-image: linear-gradient(135deg, #10b981, #06b6d4);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
   }
-  .card { @apply bg-white rounded-2xl border border-slate-200/80 shadow-card; }
-  .card-hover { @apply transition-all duration-300 hover:shadow-lift hover:-translate-y-0.5 hover:border-brand-200; }
-  .input { @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100; }
-  .label { @apply block text-sm font-medium text-slate-700 mb-1.5; }
+  .card {
+    @apply rounded-2xl border border-white/[0.08] shadow-card;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .input { @apply w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-400/70 focus:ring-2 focus:ring-brand-500/25 focus:bg-white/[0.07]; }
+  .label { @apply block text-sm font-medium text-slate-600 mb-1.5; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
 
-  /* Brand helpers */
+  /* Extra theme helpers */
   .gradient-text {
-    background-image: linear-gradient(110deg, #017b75, #04b0a8 60%, #0ea5e9);
+    @apply font-display;
+    background-image: linear-gradient(100deg, #9db1ff, #22d3ee 45%, #e879f9 90%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-  .glass { @apply bg-white/80 backdrop-blur-xl border border-slate-200/70; }
-  .neon-divider { background: linear-gradient(90deg, transparent, rgba(4, 176, 168, .4), transparent); height: 1px; border: 0; }
+  .glass { @apply border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl; }
+  .neon-divider { background: linear-gradient(90deg, transparent, rgba(100, 120, 255, .55), transparent); height: 1px; border: 0; }
   .scene-3d { perspective: 1200px; }
-
-  /* Skeleton shimmer for loading states */
-  .skeleton {
-    @apply rounded-lg;
-    background: linear-gradient(90deg, #eef1f4 25%, #f7f9fa 50%, #eef1f4 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.6s linear infinite;
-  }
 }
 
-/* Accessible motion */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-}
+/* select dropdowns render natively — keep them dark */
+select.input option { background-color: #0e1530; color: #e3e9f8; }
 
-/* Scrollbars — quiet, neutral */
+/* Scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d3dbe2; border-radius: 8px; border: 2px solid #f7f9fa; }
-::-webkit-scrollbar-thumb:hover { background: #afbdc9; }
+::-webkit-scrollbar-thumb { background: rgba(100, 120, 255, .25); border-radius: 8px; border: 2px solid #070b18; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 120, 255, .45); }
 
 /* Disable native video controls scrubbing styling where we hide them */
 video::-webkit-media-controls-timeline { display: none !important; }
 
-/* Print: flatten chrome, keep certificate paper pristine */
+/* ---------------------------------------------------------------------------
+   Dark-skin utility overrides.
+   Pages were authored against light Tailwind palettes; these post-utility
+   rules retune the handful of semantic classes that the palette remap in
+   tailwind.config.js can't express (translucent fills, light "dark" text).
+--------------------------------------------------------------------------- */
+.bg-white { background-color: rgba(255, 255, 255, 0.05); }
+
+.bg-brand-50 { background-color: rgba(100, 120, 255, 0.13); }
+.bg-brand-100 { background-color: rgba(100, 120, 255, 0.18); }
+.text-brand-600 { color: #97a8ff; }
+.text-brand-700 { color: #aab8ff; }
+.text-brand-800 { color: #c0caff; }
+.text-brand-900 { color: #dbe2ff; }
+.ring-brand-200 { --tw-ring-color: rgba(100, 120, 255, 0.35); }
+.border-brand-200 { border-color: rgba(100, 120, 255, 0.35); }
+
+.bg-emerald-50 { background-color: rgba(52, 211, 153, 0.10); }
+.bg-emerald-100 { background-color: rgba(52, 211, 153, 0.16); }
+.text-emerald-600 { color: #34d399; }
+.text-emerald-700 { color: #6ee7b7; }
+.ring-emerald-200 { --tw-ring-color: rgba(52, 211, 153, 0.30); }
+.border-emerald-200 { border-color: rgba(52, 211, 153, 0.30); }
+
+.bg-amber-50 { background-color: rgba(251, 191, 36, 0.10); }
+.bg-amber-100 { background-color: rgba(251, 191, 36, 0.16); }
+.text-amber-600 { color: #fbbf24; }
+.text-amber-700 { color: #fcd34d; }
+.ring-amber-200 { --tw-ring-color: rgba(251, 191, 36, 0.30); }
+.border-amber-200 { border-color: rgba(251, 191, 36, 0.30); }
+
+.bg-red-50 { background-color: rgba(248, 113, 113, 0.12); }
+.bg-red-100 { background-color: rgba(248, 113, 113, 0.18); }
+.text-red-600 { color: #f87171; }
+.text-red-700 { color: #fca5a5; }
+.ring-red-200 { --tw-ring-color: rgba(248, 113, 113, 0.32); }
+.border-red-200 { border-color: rgba(248, 113, 113, 0.32); }
+
+/* Print: certificates are rendered with explicit light colors; flatten chrome */
 @media print {
   body { background: #fff !important; }
 }

@@ -35,7 +35,7 @@ export default function ModuleDetail() {
           {m.videos.map((v: any, i: number) => {
             const done = v.progress?.status === 'video_completed';
             return (
-              <li key={v.id} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-brand-200 hover:bg-brand-50/40">
+              <li key={v.id} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
                 <span className={`h-8 w-8 rounded-full grid place-items-center text-sm font-bold ${done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{done ? <CheckCircle2 size={17} /> : i + 1}</span>
                 <div className="flex-1"><div className="font-medium text-slate-700 flex items-center gap-2"><Film size={15} className="text-slate-400" /> {v.title}</div>
                   {v.progress && v.progress.percentComplete > 0 && !done && <div className="text-xs text-amber-600 mt-0.5">{Math.round(v.progress.percentComplete)}% watched</div>}
