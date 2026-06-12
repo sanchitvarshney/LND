@@ -132,7 +132,7 @@ export default function SecureVideoPlayer({ video, initialStatus, onComplete }: 
         )}
         {!playing && (
           <button onClick={toggle} className="absolute inset-0 grid place-items-center bg-black/20 hover:bg-black/30 transition">
-            <span className="h-16 w-16 rounded-full bg-white/95 grid place-items-center shadow-lg shadow-glow animate-pulse-glow"><Play className="ml-1" size={28} style={{ color: '#4f46e5' }} /></span>
+            <span className="h-16 w-16 rounded-full bg-white/95 grid place-items-center shadow-lg shadow-glow animate-pulse-glow"><Play className="ml-1" size={28} style={{ color: '#017b75' }} /></span>
           </button>
         )}
 

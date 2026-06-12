@@ -29,16 +29,16 @@ export default function Certificate() {
       {/* Certificate — printable light "paper" on the dark stage */}
       <TiltCard max={3}>
         <div className="rounded-2xl p-10 relative overflow-hidden shadow-soft print:shadow-none"
-          style={{ background: 'linear-gradient(150deg,#ffffff,#eef2ff 70%,#fdf4ff)', border: '4px double #c7d2fe' }}>
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full" style={{ background: 'rgba(99,102,241,.10)' }} />
+          style={{ background: 'linear-gradient(150deg,#ffffff,#effbf9 70%,#f0fdfa)', border: '4px double #aae8e1' }}>
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full" style={{ background: 'rgba(4,176,168,.10)' }} />
           <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full" style={{ background: 'rgba(34,211,238,.10)' }} />
           <div className="relative text-center">
-            <div className="mx-auto h-14 w-14 rounded-xl grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#4f46e5,#06b6d4)' }}><Award size={28} /></div>
-            <p className="mt-4 text-xs font-bold tracking-[0.3em] uppercase" style={{ color: '#4f46e5' }}>Certificate of Completion</p>
+            <div className="mx-auto h-14 w-14 rounded-xl grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#04b0a8,#017b75)' }}><Award size={28} /></div>
+            <p className="mt-4 text-xs font-bold tracking-[0.3em] uppercase" style={{ color: '#017b75' }}>Certificate of Completion</p>
             <h1 className="mt-4 text-sm" style={{ color: '#64748b' }}>This certifies that</h1>
             <p className="text-3xl font-display font-bold mt-1" style={{ color: '#0f172a' }}>{data.user?.fullName || user?.fullName}</p>
             <p className="mt-3 text-sm" style={{ color: '#64748b' }}>has successfully completed</p>
-            <p className="text-xl font-bold mt-1" style={{ color: '#4338ca' }}>{data.module.title}</p>
+            <p className="text-xl font-bold mt-1" style={{ color: '#01756e' }}>{data.module.title}</p>
             <p className="mt-2 text-sm" style={{ color: '#64748b' }}>with a score of <b style={{ color: '#059669' }}>{data.score}%</b></p>
 
             <div className="mt-8 flex items-end justify-between">

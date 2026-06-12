@@ -16,7 +16,7 @@ export default function Certificates() {
         <div className="grid sm:grid-cols-2 gap-4">
           {certs.map((c: any) => (
             <Link key={c.id} to={`/certificates/${c.id}`} className="card p-5 flex items-center gap-4 transition-all duration-300 hover:shadow-soft hover:-translate-y-1 hover:border-brand-400/40">
-              <div className="h-12 w-12 rounded-xl text-white grid place-items-center shadow-glow" style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)' }}><Award size={22} /></div>
+              <div className="h-12 w-12 rounded-xl text-white grid place-items-center shadow-glow" style={{ background: 'linear-gradient(135deg,#04b0a8,#075f5b)' }}><Award size={22} /></div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-800 truncate">{c.module.title}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Issued {fmtDate(c.issuedAt)} · Score {c.score}%</p>
