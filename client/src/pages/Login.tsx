@@ -40,7 +40,7 @@ export default function Login() {
         {/* Brand panel */}
         <div className="hidden lg:flex flex-col justify-between p-14">
           <div className="flex items-center gap-3 animate-fade-up">
-            <img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="h-11 w-auto" />
+            <img src="https://www.mscorpres.com/assets/mscorpreslogo.jpeg" alt="MsCorpres Automation" className="h-12 w-auto bg-white rounded-lg p-1.5 shadow-sm" />
           </div>
 
           <div>
@@ -68,7 +68,7 @@ export default function Login() {
           <TiltCard max={4} className="w-full max-w-md">
             <div className="card p-8 sm:p-10 shadow-soft animate-fade-up">
               <div className="lg:hidden flex items-center mb-8">
-                <img src="/brand/mscorpres-logo.svg" alt="MsCorpres Automation" className="h-9 w-auto" />
+                <img src="https://www.mscorpres.com/assets/mscorpreslogo.jpeg" alt="MsCorpres Automation" className="h-10 w-auto bg-white rounded-lg p-1.5" />
               </div>
               <h2 className="text-2xl font-display font-bold text-slate-900">Welcome back</h2>
               <p className="text-slate-500 text-sm mt-1 mb-7">Sign in to continue your training journey.</p>

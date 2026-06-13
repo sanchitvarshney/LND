@@ -35,8 +35,7 @@ export default function Setup() {
     <div className="min-h-screen grid place-items-center bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 p-6">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2.5 text-white mb-6 justify-center">
-          <img src="/brand/mscorpres-mark-light.svg" alt="MsCorpres Automation" className="h-9 w-auto" />
-          <span className="font-display font-bold text-xl">L&amp;D Portal</span>
+          <div className="bg-white rounded-xl px-3 py-2 shadow"><img src="https://www.mscorpres.com/assets/mscorpreslogo.jpeg" alt="MsCorpres Automation" className="h-8 w-auto" /></div>
         </div>
         <div className="card p-7">
           <div className="flex items-center gap-2 text-brand-700 mb-1"><ShieldCheck size={18} /><span className="text-xs font-bold tracking-wide uppercase">First-time setup</span></div>
