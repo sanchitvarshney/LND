@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Stat, Spinner } from '../components/ui/Primitives';
 import { Users, BookOpen, Award, AlertTriangle, BarChart3, FileText, ShieldCheck } from 'lucide-react';
+import AiDigestCard from '../components/AiDigestCard';
 
 export default function AdminOverview() {
   const { data, isLoading } = useQuery({ queryKey: ['compliance'], queryFn: async () => (await api.get('/reports/compliance')).data.data });
@@ -17,6 +18,8 @@ export default function AdminOverview() {
         <Stat label="Training modules" value={d.modules} tone="brand" icon={<BookOpen size={20} />} />
         <Stat label="Overdue assignments" value={d.overdue} tone={d.overdue ? 'red' : 'slate'} icon={<AlertTriangle size={20} />} />
       </div>
+
+      <AiDigestCard />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card p-6">
