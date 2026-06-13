@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { api, setToken } from './api';
+import { api, setToken, setRefreshToken, getRefreshToken } from './api';
 
 export interface User { id: string; email: string; fullName: string; role: string; department?: string; }
 
@@ -21,8 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // attempt silent refresh + me on boot
     (async () => {
       try {
-        const { data } = await api.post('/auth/refresh');
+        const { data } = await api.post('/auth/refresh', { refreshToken: getRefreshToken() });
         setToken(data.accessToken);
+        if (data.refreshToken) setRefreshToken(data.refreshToken);
         const me = await api.get('/auth/me');
         setUser(me.data);
       } catch { setUser(null); }
@@ -33,9 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     setToken(data.accessToken);
+    setRefreshToken(data.refreshToken);
     setUser(data.user);
   };
-  const logout = () => { api.post('/auth/logout').catch(() => {}); setToken(null); setUser(null); };
+  const logout = () => { api.post('/auth/logout').catch(() => {}); setToken(null); setRefreshToken(null); setUser(null); };
   const refresh = async () => {
     try { const me = await api.get('/auth/me'); setUser(me.data); } catch { /* ignore */ }
   };

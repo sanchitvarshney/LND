@@ -31,11 +31,11 @@ router.post('/login', async (req, res) => {
   const secure = isProd || sameSite === 'none';
   res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite, secure, maxAge: 7 * 24 * 3600 * 1000 });
   await audit(req, 'auth.login', 'user', user.id);
-  res.json({ accessToken, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department } });
+  res.json({ accessToken, refreshToken, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department } });
 });
 
 router.post('/refresh', async (req, res) => {
-  const token = req.cookies?.refreshToken;
+  const token = req.cookies?.refreshToken || req.body?.refreshToken || (req.headers['x-refresh-token'] as string | undefined);
   if (!token) return res.status(401).json({ error: 'No refresh token' });
   try {
     const u = verifyRefresh(token);
