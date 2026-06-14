@@ -4,9 +4,12 @@ import { prisma } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { audit } from '../middleware/audit.js';
 import crypto from 'node:crypto';
+import { sendMail, brandEmail, appUrl } from '../mailer.js';
 
 const router = Router();
 router.use(requireAuth);
+
+function shuffle<T>(arr: T[]): T[] { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // Get questions for an assessment. Learners get a SANITIZED version (no answer keys).
 router.get('/assessments/:id/questions', async (req, res) => {
@@ -23,7 +26,11 @@ router.get('/assessments/:id/questions', async (req, res) => {
     // learner view: strip isCorrect + answer keys
     return { ...base, options: options.map((o: any) => ({ id: o.id, label: o.label })) };
   });
-  res.json({ data: { id: a.id, title: a.title, passingScore: a.passingScore, maxAttempts: a.maxAttempts, moduleId: a.moduleId, showAnswers: a.showAnswers, questions } });
+  let outQuestions = questions;
+  if (!isAdmin && a.shuffleQuestions) {
+    outQuestions = shuffle(questions).map((q: any) => (q.options ? { ...q, options: shuffle(q.options) } : q));
+  }
+  res.json({ data: { id: a.id, title: a.title, passingScore: a.passingScore, maxAttempts: a.maxAttempts, timeLimitSeconds: a.timeLimitSeconds, shuffleQuestions: a.shuffleQuestions, moduleId: a.moduleId, showAnswers: a.showAnswers, questions: outQuestions } });
 });
 
 // Start an attempt — gated on all module videos completed + attempt limit
@@ -40,7 +47,7 @@ router.post('/assessments/:id/attempts', async (req, res) => {
 
   const attempt = await prisma.quizAttempt.create({ data: { userId: req.user!.sub, assessmentId: a.id, attemptNo: prior + 1, status: 'in_progress' } });
   await audit(req, 'attempt.start', 'attempt', attempt.id);
-  res.status(201).json({ data: { attemptId: attempt.id, attemptNo: attempt.attemptNo } });
+  res.status(201).json({ data: { attemptId: attempt.id, attemptNo: attempt.attemptNo, timeLimitSeconds: a.timeLimitSeconds } });
 });
 
 // Grade helpers
@@ -118,6 +125,8 @@ router.post('/attempts/:id/submit', async (req, res) => {
       const expiresAt = mod.validityDays ? new Date(Date.now() + mod.validityDays * 86400000) : null;
       certificate = await prisma.certificate.create({ data: { userId: req.user!.sub, moduleId: attempt.assessment.moduleId, attemptId: attempt.id, serialNo: serial, verificationHash: hash, score, expiresAt } });
       await prisma.notification.create({ data: { userId: req.user!.sub, type: 'completed', title: 'Training completed', body: `You passed ${mod.title}. Your certificate is ready.` } });
+      { const learner = await prisma.user.findUnique({ where: { id: req.user!.sub } }); const url = appUrl();
+        await sendMail(learner?.email, `Certificate issued: ${mod.title}`, brandEmail('Congratulations — training complete', `You passed <b>${mod.title}</b> with a score of <b>${score}%</b>. Your certificate (No. ${serial}) is ready.`, url ? { text: 'View certificate', url: url + '/certificates' } : undefined)); }
     } else {
       certificate = existing;
     }
@@ -169,6 +178,54 @@ router.post('/assessments/:id/questions', requireRole('admin'), async (req, res)
   });
   await audit(req, 'question.create', 'question', q.id);
   res.status(201).json({ data: q });
+});
+
+// Admin: assessment settings (passing score, attempts, timer, shuffle, show answers)
+const assessmentSettingsSchema = z.object({
+  title: z.string().min(1).optional(),
+  passingScore: z.number().min(0).max(100).optional(),
+  maxAttempts: z.number().int().min(1).max(20).optional(),
+  timeLimitSeconds: z.number().int().min(0).nullable().optional(),
+  shuffleQuestions: z.boolean().optional(),
+  showAnswers: z.boolean().optional(),
+});
+router.patch('/assessments/:id', requireRole('admin'), async (req, res) => {
+  const p = assessmentSettingsSchema.safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input' });
+  const exists = await prisma.assessment.findUnique({ where: { id: req.params.id } });
+  if (!exists) return res.status(404).json({ error: 'Assessment not found' });
+  const data: any = { ...p.data };
+  if (data.timeLimitSeconds === 0) data.timeLimitSeconds = null;
+  const a = await prisma.assessment.update({ where: { id: req.params.id }, data });
+  await audit(req, 'assessment.update', 'assessment', a.id);
+  res.json({ data: a });
+});
+
+// Admin: edit a question
+router.patch('/questions/:id', requireRole('admin'), async (req, res) => {
+  const p = questionSchema.partial().safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input' });
+  const exists = await prisma.question.findUnique({ where: { id: req.params.id } });
+  if (!exists) return res.status(404).json({ error: 'Question not found' });
+  const data: any = {};
+  if (p.data.type !== undefined) data.type = p.data.type;
+  if (p.data.prompt !== undefined) data.prompt = p.data.prompt;
+  if (p.data.points !== undefined) data.points = p.data.points;
+  if (p.data.explanation !== undefined) data.explanation = p.data.explanation;
+  if (p.data.options !== undefined) data.optionsJson = JSON.stringify(p.data.options);
+  if (p.data.answerKey !== undefined) data.answerKeyJson = JSON.stringify(p.data.answerKey);
+  const q = await prisma.question.update({ where: { id: req.params.id }, data });
+  await audit(req, 'question.update', 'question', q.id);
+  res.json({ data: q });
+});
+
+// Admin: delete a question
+router.delete('/questions/:id', requireRole('admin'), async (req, res) => {
+  const q = await prisma.question.findUnique({ where: { id: req.params.id } });
+  if (!q) return res.status(404).json({ error: 'Question not found' });
+  await prisma.question.delete({ where: { id: req.params.id } });
+  await audit(req, 'question.delete', 'question', q.id);
+  res.json({ data: { deleted: true } });
 });
 
 export default router;

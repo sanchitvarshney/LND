@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
 import { Spinner } from '../components/ui/Primitives';
 import { QuestionRenderer, AnswerValue, TYPE_LABEL } from '../components/QuestionRenderer';
@@ -25,6 +25,15 @@ export default function Assessment() {
   const [cur, setCur] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [review, setReview] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const submitRef = useRef<() => void>(() => {});
+  useEffect(() => { if (data?.timeLimitSeconds && remaining === null) setRemaining(data.timeLimitSeconds); }, [data, remaining]);
+  useEffect(() => {
+    if (remaining === null) return;
+    if (remaining <= 0) { submitRef.current(); return; }
+    const t = setTimeout(() => setRemaining((r) => (r === null ? null : r - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [remaining]);
 
   if (!mod || isLoading) return <div className="grid place-items-center py-20"><Spinner /></div>;
   if (error) {
@@ -51,12 +60,16 @@ export default function Assessment() {
       nav(`/attempts/${data.attemptId}/result`, { state: res });
     } catch (e) { setSubmitting(false); }
   };
+  submitRef.current = submit;
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <Link to={`/modules/${id}`} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800"><ArrowLeft size={16} /> {mod.title}</Link>
-        <span className="text-sm text-slate-400">Attempt #{data.attemptNo} · Pass ≥ {data.passingScore}%</span>
+        <div className="flex items-center gap-2">
+          {remaining !== null && <span className={`chip font-mono ${remaining <= 30 ? 'bg-red-50 text-red-700 ring-1 ring-red-200 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>⏱ {fmtTime(remaining)}</span>}
+          <span className="text-sm text-slate-400">Attempt #{data.attemptNo} · Pass ≥ {data.passingScore}%</span>
+        </div>
       </div>
 
       {/* progress bar */}
@@ -105,3 +118,5 @@ export default function Assessment() {
     </div>
   );
 }
+
+function fmtTime(s: number) { const m = Math.floor(s / 60); const sec = s % 60; return `${m}:${sec.toString().padStart(2, '0')}`; }

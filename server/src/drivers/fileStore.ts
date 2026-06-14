@@ -207,6 +207,14 @@ function makeModel(model: ModelName) {
       return create({ data: args.create, include: args.include });
     },
     count: (args: { where?: Row } = {}) => Promise.resolve(coll().filter(whereFn(args.where)).length),
+    delete: (args: { where: Row; include?: any }) => {
+      const row = coll().find(whereFn(args.where));
+      if (!row) return Promise.reject(new Error('Record to delete does not exist'));
+      const snapshot = resolveInclude(model, row, args.include);
+      store[model] = coll().filter((r) => r !== row);
+      save();
+      return Promise.resolve(snapshot);
+    },
     deleteMany: (args: { where?: Row } = {}) => {
       const keep = coll().filter((r) => !whereFn(args.where)(r));
       const removed = coll().length - keep.length;

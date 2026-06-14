@@ -13,6 +13,7 @@ import publicRoutes from './routes/public.js';
 import aiRoutes from './routes/ai.js';
 import { initDb } from './db.js';
 import { bootstrapFirstAdmin } from './seed.js';
+import { startScheduler } from './scheduler.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -65,5 +66,5 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 initDb()
   .then(() => bootstrapFirstAdmin())
-  .then(() => app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT} (${isProd ? 'production' : 'development'})`)))
+  .then(() => app.listen(PORT, () => { console.log(`API listening on http://localhost:${PORT} (${isProd ? 'production' : 'development'})`); startScheduler(); }))
   .catch((e) => { console.error('Startup failed:', e); process.exit(1); });

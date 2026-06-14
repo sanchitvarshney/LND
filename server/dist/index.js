@@ -18,6 +18,7 @@ const public_js_1 = __importDefault(require("./routes/public.js"));
 const ai_js_1 = __importDefault(require("./routes/ai.js"));
 const db_js_1 = require("./db.js");
 const seed_js_1 = require("./seed.js");
+const scheduler_js_1 = require("./scheduler.js");
 const app = (0, express_1.default)();
 const PORT = Number(process.env.PORT || 4000);
 const ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -68,5 +69,5 @@ app.use((err, _req, res, _next) => {
 });
 (0, db_js_1.initDb)()
     .then(() => (0, seed_js_1.bootstrapFirstAdmin)())
-    .then(() => app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT} (${isProd ? 'production' : 'development'})`)))
+    .then(() => app.listen(PORT, () => { console.log(`API listening on http://localhost:${PORT} (${isProd ? 'production' : 'development'})`); (0, scheduler_js_1.startScheduler)(); }))
     .catch((e) => { console.error('Startup failed:', e); process.exit(1); });

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { api } from '../lib/api';
 import { loadYouTubeApi } from '../lib/youtubeApi';
 import { parseYouTubeId } from '../lib/video';
-import { Play, Pause, Volume2, VolumeX, Maximize, Lock, ShieldCheck, CheckCircle2, Youtube } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Lock, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface Props {
   video: { id: string; sourceUrl: string; durationSeconds: number; binSizeSeconds: number };
@@ -177,15 +177,14 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
         <style>{`.yt-fs:fullscreen{width:100vw!important;height:100vh!important;aspect-ratio:auto!important;border-radius:0}.yt-fs:fullscreen .yt-host{width:100%!important;height:100%!important}.yt-fs:fullscreen .yt-host iframe,.yt-fs:fullscreen>iframe{width:100%!important;height:100%!important}`}</style>
         <div ref={hostRef} className="yt-host w-full h-full pointer-events-none" />
 
-        {/* Click-catcher: intercepts all interaction so YouTube's own UI can't be used to skip */}
+        {/* Click-catcher: intercepts all interaction so YouTube's own UI (title, share, "watch on YouTube") can't be seen or used */}
         <button aria-label="Play/pause" onClick={toggle} className="absolute inset-0 z-10 cursor-pointer" onContextMenu={(e) => e.preventDefault()} />
+        {/* Top scrim — masks the source/title strip that can briefly appear on start */}
+        <div className="absolute top-0 inset-x-0 h-14 z-10 bg-gradient-to-b from-black/85 to-transparent pointer-events-none" />
 
         {/* Compliance banner */}
         <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-md bg-black/60 backdrop-blur px-2.5 py-1.5 text-white text-xs font-medium pointer-events-none">
           <Lock size={13} /> Forward skipping disabled for compliance
-        </div>
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 rounded-md bg-red-600/90 px-2 py-1 text-white text-[11px] font-semibold pointer-events-none">
-          <Youtube size={13} /> YouTube
         </div>
         {completed && (
           <div className="absolute top-12 right-3 z-20 flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-white text-xs font-semibold pointer-events-none">
@@ -200,7 +199,7 @@ export default function YouTubeSecurePlayer({ video, initialStatus, onComplete }
           </div>
         )}
         {!playing && (
-          <button onClick={toggle} className="absolute inset-0 z-20 grid place-items-center bg-black/20 hover:bg-black/30 transition">
+          <button onClick={toggle} className="absolute inset-0 z-20 grid place-items-center bg-black hover:bg-black/95 transition">
             <span className="h-16 w-16 rounded-full bg-white/95 grid place-items-center shadow-lg shadow-glow animate-pulse-glow"><Play className="ml-1" size={28} style={{ color: '#4f46e5' }} /></span>
           </button>
         )}

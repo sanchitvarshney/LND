@@ -9,6 +9,7 @@ const zod_1 = require("zod");
 const db_js_1 = require("../db.js");
 const auth_js_1 = require("../middleware/auth.js");
 const audit_js_1 = require("../middleware/audit.js");
+const mailer_js_1 = require("../mailer.js");
 const router = (0, express_1.Router)();
 router.use(auth_js_1.requireAuth);
 // Users list (admin) / team (manager)
@@ -16,7 +17,7 @@ router.get('/users', (0, auth_js_1.requireRole)('manager'), async (req, res) => 
     const me = req.user;
     const where = me.role === 'manager' ? { managerId: me.sub } : {};
     const users = await db_js_1.prisma.user.findMany({ where, orderBy: { fullName: 'asc' } });
-    res.json({ data: users.map((u) => ({ id: u.id, email: u.email, fullName: u.fullName, role: u.role, department: u.department, managerId: u.managerId })) });
+    res.json({ data: users.map((u) => ({ id: u.id, email: u.email, fullName: u.fullName, role: u.role, department: u.department, managerId: u.managerId, status: u.status })) });
 });
 // Manager team compliance rollup
 router.get('/reports/team', (0, auth_js_1.requireRole)('manager'), async (req, res) => {
@@ -95,6 +96,10 @@ router.post('/users', (0, auth_js_1.requireRole)('admin'), async (req, res) => {
             email: p.data.email.toLowerCase(), passwordHash: bcryptjs_1.default.hashSync(p.data.password, 10),
             fullName: p.data.fullName, role: p.data.role, department: p.data.department ?? null, managerId: p.data.managerId ?? null,
         } });
+    {
+        const url = (0, mailer_js_1.appUrl)();
+        await (0, mailer_js_1.sendMail)(user.email, 'Your Learning & Development Portal account', (0, mailer_js_1.brandEmail)('Welcome to the L&D Portal', `An account has been created for you (role: <b>${user.role}</b>). Please sign in with the credentials provided by your administrator and change your password.`, url ? { text: 'Sign in', url } : undefined));
+    }
     await (0, audit_js_1.audit)(req, 'user.create', 'user', user.id, { role: user.role });
     res.status(201).json({ data: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, department: user.department } });
 });
@@ -110,5 +115,51 @@ router.patch('/users/:id/password', (0, auth_js_1.requireRole)('admin'), async (
     await db_js_1.prisma.user.update({ where: { id: user.id }, data: { passwordHash: bcryptjs_1.default.hashSync(p.data.password, 10) } });
     await (0, audit_js_1.audit)(req, 'user.password_reset', 'user', user.id, {});
     res.json({ data: { id: user.id, email: user.email } });
+});
+// Admin: edit a user (profile, role, department, manager, active/inactive)
+const userEditSchema = zod_1.z.object({
+    fullName: zod_1.z.string().min(1).optional(),
+    role: zod_1.z.enum(['admin', 'manager', 'learner']).optional(),
+    department: zod_1.z.string().nullable().optional(),
+    managerId: zod_1.z.string().nullable().optional(),
+    status: zod_1.z.enum(['active', 'inactive']).optional(),
+});
+router.patch('/users/:id', (0, auth_js_1.requireRole)('admin'), async (req, res) => {
+    const p = userEditSchema.safeParse(req.body);
+    if (!p.success)
+        return res.status(400).json({ error: 'Invalid input' });
+    const target = await db_js_1.prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target)
+        return res.status(404).json({ error: 'User not found' });
+    const demoting = (p.data.status === 'inactive') || (p.data.role && p.data.role !== 'admin');
+    if (req.params.id === req.user.sub && demoting)
+        return res.status(400).json({ error: 'You cannot deactivate or demote your own account.' });
+    if (demoting && target.role === 'admin') {
+        const admins = await db_js_1.prisma.user.count({ where: { role: 'admin', status: 'active' } });
+        if (admins <= 1)
+            return res.status(400).json({ error: 'Cannot deactivate or demote the last active admin.' });
+    }
+    const u = await db_js_1.prisma.user.update({ where: { id: target.id }, data: p.data });
+    await (0, audit_js_1.audit)(req, 'user.update', 'user', u.id, { role: u.role, status: u.status });
+    res.json({ data: { id: u.id, email: u.email, fullName: u.fullName, role: u.role, department: u.department, managerId: u.managerId, status: u.status } });
+});
+// Admin: delete a user (hard delete, guarded — prefer deactivate when records exist)
+router.delete('/users/:id', (0, auth_js_1.requireRole)('admin'), async (req, res) => {
+    if (req.params.id === req.user.sub)
+        return res.status(400).json({ error: 'You cannot delete your own account.' });
+    const target = await db_js_1.prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target)
+        return res.status(404).json({ error: 'User not found' });
+    if (target.role === 'admin') {
+        const admins = await db_js_1.prisma.user.count({ where: { role: 'admin', status: 'active' } });
+        if (admins <= 1)
+            return res.status(400).json({ error: 'Cannot delete the last admin.' });
+    }
+    const certs = await db_js_1.prisma.certificate.count({ where: { userId: target.id } });
+    if (certs > 0)
+        return res.status(409).json({ error: 'User has issued certificates. Deactivate instead of deleting (keeps compliance records).' });
+    await db_js_1.prisma.user.delete({ where: { id: target.id } });
+    await (0, audit_js_1.audit)(req, 'user.delete', 'user', target.id);
+    res.json({ data: { deleted: true } });
 });
 exports.default = router;

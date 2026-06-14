@@ -5,7 +5,7 @@ import { Badge, Spinner } from '../components/ui/Primitives';
 import { TYPE_LABEL } from '../components/QuestionRenderer';
 import { isYouTube } from '../lib/video';
 import { fetchYouTubeDuration } from '../lib/youtubeApi';
-import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2, Sparkles, KeyRound } from 'lucide-react';
+import { Plus, FileText, HelpCircle, X, Check, Trash2, Film, UserPlus, Users, CalendarPlus, Youtube, Loader2, Sparkles, KeyRound, Pencil, Settings2, Power, ListChecks } from 'lucide-react';
 import { useAiStatus, generateQuestions } from '../lib/ai';
 
 const ROLE_TONE: any = { admin: 'brand', manager: 'amber', learner: 'slate', super_admin: 'brand' };
@@ -20,6 +20,9 @@ export default function Admin() {
   const [vFor, setVFor] = useState<any>(null);
   const [aFor, setAFor] = useState<any>(null);
   const [pwFor, setPwFor] = useState<any>(null);
+  const [editMod, setEditMod] = useState<any>(null);
+  const [manageMod, setManageMod] = useState<any>(null);
+  const [editUser, setEditUser] = useState<any>(null);
 
   const refreshModules = () => qc.invalidateQueries({ queryKey: ['adminModules'] });
   const refreshUsers = () => qc.invalidateQueries({ queryKey: ['adminUsers'] });
@@ -40,17 +43,19 @@ export default function Admin() {
         <h2 className="font-bold text-slate-800 flex items-center gap-2"><FileText size={18} /> Modules</h2>
         {(mods || []).length === 0 && <div className="card p-8 text-center text-slate-400 text-sm">No modules yet. Click &ldquo;New module&rdquo; to create one.</div>}
         {(mods || []).map((m: any) => (
-          <div key={m.id} className="card p-5">
+          <div key={m.id} className={`card p-5 ${m.status === 'archived' ? 'opacity-60' : ''}`}>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="h-10 w-10 rounded-lg bg-brand-50 text-brand-700 grid place-items-center"><FileText size={20} /></div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2"><h3 className="font-bold text-slate-800">{m.title}</h3><Badge tone="slate">{m.category}</Badge></div>
+                <div className="flex items-center gap-2 flex-wrap"><h3 className="font-bold text-slate-800">{m.title}</h3><Badge tone="slate">{m.category}</Badge>{m.status === 'archived' && <Badge tone="amber">Archived</Badge>}</div>
                 <p className="text-xs text-slate-400 mt-0.5">{m.videoCount} videos · {m.questionCount} questions · Pass &ge; {m.passThreshold}%</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap justify-end">
                 <button onClick={() => setVFor(m)} className="btn-ghost !py-1.5 text-xs"><Film size={14} /> Add video</button>
                 <button onClick={() => setQFor(m)} className="btn-ghost !py-1.5 text-xs"><HelpCircle size={14} /> Add question</button>
+                <button onClick={() => setManageMod(m)} className="btn-ghost !py-1.5 text-xs"><ListChecks size={14} /> Manage</button>
                 <button onClick={() => setAFor(m)} className="btn-ghost !py-1.5 text-xs"><CalendarPlus size={14} /> Assign</button>
+                <button onClick={() => setEditMod(m)} className="btn-ghost !py-1.5 text-xs"><Settings2 size={14} /> Settings</button>
               </div>
             </div>
           </div>
@@ -68,9 +73,14 @@ export default function Admin() {
                   <tr key={u.id} className="border-t border-slate-100">
                     <td className="px-5 py-3 font-semibold text-slate-800">{u.fullName}</td>
                     <td className="px-5 py-3 text-slate-600">{u.email}</td>
-                    <td className="px-5 py-3"><Badge tone={ROLE_TONE[u.role] || 'slate'}>{u.role}</Badge></td>
+                    <td className="px-5 py-3"><div className="flex items-center gap-1.5"><Badge tone={ROLE_TONE[u.role] || 'slate'}>{u.role}</Badge>{u.status === 'inactive' && <Badge tone="red">inactive</Badge>}</div></td>
                     <td className="px-5 py-3 text-slate-500">{u.department || '—'}</td>
-                    <td className="px-5 py-3 text-right"><button onClick={() => setPwFor(u)} className="btn-ghost !py-1.5 text-xs"><KeyRound size={14} /> Password</button></td>
+                    <td className="px-5 py-3"><div className="flex items-center justify-end gap-1">
+                      <button onClick={() => setEditUser(u)} className="btn-ghost !py-1.5 !px-2 text-xs" title="Edit user"><Pencil size={14} /></button>
+                      <button onClick={() => setPwFor(u)} className="btn-ghost !py-1.5 !px-2 text-xs" title="Set password"><KeyRound size={14} /></button>
+                      <UserStatusButton user={u} onChanged={refreshUsers} />
+                      <UserDeleteButton user={u} onChanged={refreshUsers} />
+                    </div></td>
                   </tr>
                 ))}
               </tbody>
@@ -85,6 +95,9 @@ export default function Admin() {
       {vFor && <VideoModal module={vFor} onClose={() => setVFor(null)} onSaved={() => { setVFor(null); refreshModules(); }} />}
       {aFor && <AssignModal module={aFor} users={(users || []).filter((u: any) => u.role === 'learner' || u.role === 'manager')} onClose={() => setAFor(null)} onSaved={() => setAFor(null)} />}
       {pwFor && <PasswordModal user={pwFor} onClose={() => setPwFor(null)} onSaved={() => setPwFor(null)} />}
+      {editMod && <ModuleSettingsModal module={editMod} onClose={() => setEditMod(null)} onSaved={() => { setEditMod(null); refreshModules(); }} />}
+      {manageMod && <ManageContentModal module={manageMod} onClose={() => setManageMod(null)} onChanged={refreshModules} />}
+      {editUser && <UserEditModal user={editUser} users={users || []} onClose={() => setEditUser(null)} onSaved={() => { setEditUser(null); refreshUsers(); }} />}
     </div>
   );
 }
@@ -248,30 +261,179 @@ function parseIdSafe(url: string): string {
 function fmtDur(s: number) { const m = Math.floor(s / 60); const sec = s % 60; return `${m}m ${sec}s`; }
 
 function AssignModal({ module, users, onClose, onSaved }: any) {
+  const [mode, setMode] = useState('person');
   const [userId, setUserId] = useState('');
+  const [department, setDepartment] = useState('');
   const [dueAt, setDueAt] = useState('');
-  const [done, setDone] = useState(false);
+  const [msg, setMsg] = useState('');
+  const depts: string[] = Array.from(new Set((users || []).map((u: any) => u.department).filter(Boolean)));
   const m = useMutation({
-    mutationFn: () => api.post('/assignments', { userId, moduleId: module.id, dueAt: dueAt || undefined }),
-    onSuccess: () => { setDone(true); setUserId(''); setTimeout(onSaved, 700); },
+    mutationFn: () => {
+      if (mode === 'person') return api.post('/assignments', { userId, moduleId: module.id, dueAt: dueAt || undefined });
+      const body: any = { moduleId: module.id, dueAt: dueAt || undefined };
+      if (mode === 'all-learners') body.role = 'learner';
+      else if (mode === 'all-managers') body.role = 'manager';
+      else if (mode === 'department') body.department = department;
+      return api.post('/assignments/bulk', body);
+    },
+    onSuccess: (r: any) => { const n = r?.data?.data?.assigned; setMsg(mode === 'person' ? 'Assigned \u2713' : `Assigned to ${n} ${n === 1 ? 'person' : 'people'} \u2713`); setTimeout(onSaved, 1000); },
+  });
+  const disabled = m.isPending || (mode === 'person' && !userId) || (mode === 'department' && !department);
+  return (
+    <Modal title={`Assign \u00b7 ${module.title}`} onClose={onClose}>
+      <div className="space-y-3">
+        <div><label className="label">Assign to</label>
+          <select className="input" value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="person">A specific person</option>
+            <option value="all-learners">All learners</option>
+            <option value="all-managers">All managers</option>
+            <option value="department">Everyone in a department</option>
+          </select>
+        </div>
+        {mode === 'person' && (
+          <div><label className="label">Person</label>
+            <select className="input" value={userId} onChange={(e) => setUserId(e.target.value)}>
+              <option value="">— select a person —</option>
+              {(users || []).map((u: any) => <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>)}
+            </select>
+          </div>
+        )}
+        {mode === 'department' && (
+          <div><label className="label">Department</label>
+            <select className="input" value={department} onChange={(e) => setDepartment(e.target.value)}>
+              <option value="">— select a department —</option>
+              {depts.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+            {depts.length === 0 && <p className="text-xs text-slate-400 mt-1">No departments set on users yet.</p>}
+          </div>
+        )}
+        <div><label className="label">Due date (optional)</label><input className="input" type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></div>
+        {msg && <p className="text-sm text-emerald-600">{msg}</p>}
+        {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not assign.'}</p>}
+        <button onClick={() => m.mutate()} disabled={disabled} className="btn-primary w-full">Assign training</button>
+      </div>
+    </Modal>
+  );
+}
+
+function UserStatusButton({ user, onChanged }: any) {
+  const active = user.status !== 'inactive';
+  const m = useMutation({ mutationFn: () => api.patch(`/users/${user.id}`, { status: active ? 'inactive' : 'active' }), onSuccess: onChanged, onError: (e: any) => alert(e?.response?.data?.error || 'Could not change status.') });
+  return <button onClick={() => m.mutate()} disabled={m.isPending} title={active ? 'Deactivate' : 'Activate'} className={`btn-ghost !py-1.5 !px-2 text-xs ${active ? 'text-amber-600' : 'text-emerald-600'}`}><Power size={14} /></button>;
+}
+
+function UserDeleteButton({ user, onChanged }: any) {
+  const m = useMutation({ mutationFn: () => api.delete(`/users/${user.id}`), onSuccess: onChanged, onError: (e: any) => alert(e?.response?.data?.error || 'Could not delete user.') });
+  return <button onClick={() => { if (confirm(`Delete ${user.fullName}? This cannot be undone. (Tip: deactivate instead if they have records.)`)) m.mutate(); }} disabled={m.isPending} title="Delete user" className="btn-ghost !py-1.5 !px-2 text-xs text-red-600"><Trash2 size={14} /></button>;
+}
+
+function ModuleSettingsModal({ module, onClose, onSaved }: any) {
+  const [f, setF] = useState({ title: module.title, description: module.description || '', category: module.category || 'Compliance', passThreshold: module.passThreshold ?? 70, validityDays: module.validityDays ?? '', status: module.status || 'published' });
+  const [as, setAs] = useState<any>(null);
+  useEffect(() => { (async () => { try { const full = (await api.get(`/modules/${module.id}`)).data.data; const a = full.assessment; setAs({ id: a.id, maxAttempts: a.maxAttempts ?? 3, timeLimitMin: a.timeLimitSeconds ? Math.round(a.timeLimitSeconds / 60) : 0, shuffleQuestions: !!a.shuffleQuestions, showAnswers: a.showAnswers !== false }); } catch {} })(); }, [module.id]);
+  const m = useMutation({
+    mutationFn: async () => {
+      await api.patch(`/modules/${module.id}`, { title: f.title, description: f.description, category: f.category, passThreshold: Number(f.passThreshold), validityDays: f.validityDays === '' ? null : Number(f.validityDays), status: f.status });
+      if (as) await api.patch(`/assessments/${as.id}`, { maxAttempts: Number(as.maxAttempts), timeLimitSeconds: as.timeLimitMin ? Number(as.timeLimitMin) * 60 : 0, shuffleQuestions: as.shuffleQuestions, showAnswers: as.showAnswers });
+    },
+    onSuccess: onSaved,
   });
   return (
-    <Modal title={`Assign · ${module.title}`} onClose={onClose}>
+    <Modal title={`Module settings \u00b7 ${module.title}`} onClose={onClose}>
       <div className="space-y-3">
-        {users.length === 0 ? <p className="text-sm text-slate-500">Create a learner or manager first, then assign this module to them.</p> : (
-          <>
-            <div><label className="label">Assign to</label>
-              <select className="input" value={userId} onChange={(e) => setUserId(e.target.value)}>
-                <option value="">— select a person —</option>
-                {users.map((u: any) => <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>)}
-              </select>
+        <div><label className="label">Title</label><input className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
+        <div><label className="label">Description</label><textarea className="input" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="label">Category</label><input className="input" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} /></div>
+          <div><label className="label">Passing score %</label><input className="input" type="number" value={f.passThreshold} onChange={(e) => setF({ ...f, passThreshold: +e.target.value })} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="label">Recertify after (days)</label><input className="input" type="number" placeholder="never" value={f.validityDays} onChange={(e) => setF({ ...f, validityDays: e.target.value === '' ? '' : +e.target.value } as any)} /><p className="text-[11px] text-slate-400 mt-1">Blank = no expiry.</p></div>
+          <div><label className="label">Status</label><select className="input" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
+        </div>
+        {as && (
+          <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-3 space-y-3">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Assessment</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="label">Max attempts</label><input className="input" type="number" value={as.maxAttempts} onChange={(e) => setAs({ ...as, maxAttempts: +e.target.value })} /></div>
+              <div><label className="label">Time limit (min)</label><input className="input" type="number" placeholder="0 = none" value={as.timeLimitMin} onChange={(e) => setAs({ ...as, timeLimitMin: +e.target.value })} /></div>
             </div>
-            <div><label className="label">Due date (optional)</label><input className="input" type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></div>
-            {done && <p className="text-sm text-emerald-600">Assigned ✓</p>}
-            {m.isError && <p className="text-sm text-red-600">Could not assign.</p>}
-            <button onClick={() => m.mutate()} disabled={m.isPending || !userId} className="btn-primary w-full">Assign training</button>
-          </>
+            <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={as.shuffleQuestions} onChange={(e) => setAs({ ...as, shuffleQuestions: e.target.checked })} /> Shuffle question &amp; option order</label>
+            <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={as.showAnswers} onChange={(e) => setAs({ ...as, showAnswers: e.target.checked })} /> Show correct answers after submit</label>
+          </div>
         )}
+        {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not save settings.'}</p>}
+        <button onClick={() => m.mutate()} disabled={m.isPending || !f.title} className="btn-primary w-full">Save settings</button>
+      </div>
+    </Modal>
+  );
+}
+
+function ManageContentModal({ module, onClose, onChanged }: any) {
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ['manage', module.id],
+    queryFn: async () => {
+      const full = (await api.get(`/modules/${module.id}`)).data.data;
+      const qs = (await api.get(`/assessments/${full.assessment.id}/questions`)).data.data.questions;
+      return { videos: full.videos || [], questions: qs || [] };
+    },
+  });
+  const delVideo = async (id: string) => { if (!confirm('Delete this video?')) return; await api.delete(`/videos/${id}`); await refetch(); onChanged(); };
+  const delQ = async (id: string) => { if (!confirm('Delete this question?')) return; await api.delete(`/questions/${id}`); await refetch(); onChanged(); };
+  return (
+    <Modal title={`Manage content \u00b7 ${module.title}`} onClose={onClose}>
+      {isLoading ? <div className="py-6 grid place-items-center"><Loader2 className="animate-spin text-brand-500" /></div> : (
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Videos ({data?.videos.length || 0})</p>
+            <div className="space-y-2">
+              {(data?.videos || []).map((v: any) => (
+                <div key={v.id} className="flex items-center gap-2 rounded-lg ring-1 ring-slate-200 px-3 py-2">
+                  <Film size={15} className="text-slate-400" />
+                  <div className="flex-1 min-w-0"><div className="text-sm font-medium text-slate-800 truncate">{v.title}</div><div className="text-[11px] text-slate-400 truncate">{v.sourceUrl}</div></div>
+                  <button onClick={() => delVideo(v.id)} className="text-red-600 hover:bg-red-50 rounded-md p-1.5" title="Delete video"><Trash2 size={15} /></button>
+                </div>
+              ))}
+              {(data?.videos || []).length === 0 && <p className="text-sm text-slate-400">No videos.</p>}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Questions ({data?.questions.length || 0})</p>
+            <div className="space-y-2">
+              {(data?.questions || []).map((q: any) => (
+                <div key={q.id} className="flex items-center gap-2 rounded-lg ring-1 ring-slate-200 px-3 py-2">
+                  <Badge tone="slate">{TYPE_LABEL[q.type] || q.type}</Badge>
+                  <div className="flex-1 min-w-0 text-sm text-slate-700 truncate">{q.prompt}</div>
+                  <button onClick={() => delQ(q.id)} className="text-red-600 hover:bg-red-50 rounded-md p-1.5" title="Delete question"><Trash2 size={15} /></button>
+                </div>
+              ))}
+              {(data?.questions || []).length === 0 && <p className="text-sm text-slate-400">No questions.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function UserEditModal({ user, users, onClose, onSaved }: any) {
+  const [f, setF] = useState({ fullName: user.fullName, role: user.role, department: user.department || '', managerId: user.managerId || '' });
+  const managers = (users || []).filter((u: any) => u.role === 'manager');
+  const m = useMutation({
+    mutationFn: () => api.patch(`/users/${user.id}`, { fullName: f.fullName, role: f.role, department: f.department || null, managerId: f.managerId || null }),
+    onSuccess: onSaved,
+  });
+  return (
+    <Modal title={`Edit user \u00b7 ${user.email}`} onClose={onClose}>
+      <div className="space-y-3">
+        <div><label className="label">Full name</label><input className="input" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="label">Role</label><select className="input" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="learner">Learner</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+          <div><label className="label">Department</label><input className="input" value={f.department} onChange={(e) => setF({ ...f, department: e.target.value })} /></div>
+        </div>
+        <div><label className="label">Manager</label><select className="input" value={f.managerId} onChange={(e) => setF({ ...f, managerId: e.target.value })}><option value="">— none —</option>{managers.map((mgr: any) => <option key={mgr.id} value={mgr.id}>{mgr.fullName}</option>)}</select></div>
+        {m.isError && <p className="text-sm text-red-600">{(m.error as any)?.response?.data?.error || 'Could not save.'}</p>}
+        <button onClick={() => m.mutate()} disabled={m.isPending || !f.fullName} className="btn-primary w-full">Save changes</button>
       </div>
     </Modal>
   );

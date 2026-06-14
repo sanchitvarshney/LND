@@ -143,7 +143,12 @@ ${p.data.sourceText ? `\nGround the questions in this source material:\n---\n${p
     const clean = (Array.isArray(drafts) ? drafts : []).filter((d) => d && d.prompt && d.type).slice(0, p.data.count).map((d) => ({
       type: d.type, prompt: String(d.prompt), points: Math.min(3, Math.max(1, Number(d.points) || 1)),
       explanation: d.explanation ? String(d.explanation) : undefined,
-      options: d.options?.map((o) => ({ id: String(o.id), label: String(o.label), isCorrect: !!o.isCorrect })),
+      options: Array.isArray(d.options) ? d.options.map((o: any, i: number) => {
+        const id = o && o.id != null ? String(o.id) : String.fromCharCode(97 + i);
+        const rawLabel = typeof o === 'string' ? o : (o.label ?? o.text ?? o.option ?? o.value ?? o.answer ?? o.choice ?? o.title ?? o.content ?? '');
+        const isCorrect = !!(o && (o.isCorrect ?? o.correct ?? o.is_correct ?? o.right));
+        return { id, label: String(rawLabel), isCorrect };
+      }) : undefined,
       answerKey: d.answerKey ? { matchType: 'keyword' as const, value: String(d.answerKey.value), caseSensitive: false } : undefined,
     }));
 
